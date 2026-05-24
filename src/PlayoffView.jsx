@@ -2,15 +2,16 @@ import React, { useEffect, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
 import { TEAMS } from "./data";
 
-function BracketMatch({ match, scores, onOpen, showToast }) {
+function BracketMatch({ match, scores, onOpen }) {
   if (!match) return <div style={{ height: 52 }} />;
   const s = scores[match.id] || {};
   const isTBD = match.home === "---" && match.away === "---";
-  const winner = s.winner || (() => {
+  const winner = useMemo(() => {
+    if (s.winner) return s.winner;
     const h = parseInt(s.gh), a = parseInt(s.ga);
     if (!isNaN(h) && !isNaN(a) && h !== a) return h > a ? match.home : match.away;
     return null;
-  })();
+  }, [s, match.home, match.away]);
   const hasWinner = winner !== null;
   return (
     <div 
@@ -35,12 +36,29 @@ function BracketMatch({ match, scores, onOpen, showToast }) {
   );
 }
 
-const BCol = ({ ids, label, variant, side, mt, bfm, scores, openModal, showToast }) => (
+BracketMatch.propTypes = {
+  match: PropTypes.object,
+  scores: PropTypes.object.isRequired,
+  onOpen: PropTypes.func.isRequired
+};
+
+const BCol = ({ ids, label, variant, side, mt, bfm, scores, openModal }) => (
   <div className={`bcol ${side}`} style={{ paddingTop: mt || 0 }}>
     <div className={`rnd-hdr ${variant}`}>{label}</div>
-    {ids.map(id => <BracketMatch key={id} match={bfm(id)} scores={scores} onOpen={openModal} showToast={showToast} />)}
+    {ids.map(id => <BracketMatch key={id} match={bfm(id)} scores={scores} onOpen={openModal} />)}
   </div>
 );
+
+BCol.propTypes = {
+  ids: PropTypes.array.isRequired,
+  label: PropTypes.string.isRequired,
+  variant: PropTypes.string.isRequired,
+  side: PropTypes.string.isRequired,
+  mt: PropTypes.number,
+  bfm: PropTypes.func.isRequired,
+  scores: PropTypes.object.isRequired,
+  openModal: PropTypes.func.isRequired
+};
 
 export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom, vpRef, onMouseDown, allBracketMatches, showToast }) {
   const matchMap = useMemo(() => {
@@ -152,26 +170,26 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
       </div>
       <div className="bracket-viewport" ref={vpRef} onMouseDown={onMouseDown} style={{ height: "65vh" }}>
         <div className="bracket-canvas" style={{ transform: `scale(${zoom})` }}>
-          <BCol ids={["P73","P74","P75","P77","P76","P78","P79","P80"]} label="16vos" variant="dieciseis" side="left paired" bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
-          <BCol ids={["P89","P90","P91","P92"]} label="Octavos" variant="octavos" side="left paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
-          <BCol ids={["P97","P98"]} label="Cuartos" variant="cuartos" side="left paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
-          <BCol ids={["P101"]} label="Semifinal" variant="semi" side="left solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
+          <BCol ids={["P73","P74","P75","P77","P76","P78","P79","P80"]} label="16vos" variant="dieciseis" side="left paired" bfm={bfm} scores={scores} openModal={openModal} />
+          <BCol ids={["P89","P90","P91","P92"]} label="Octavos" variant="octavos" side="left paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} />
+          <BCol ids={["P97","P98"]} label="Cuartos" variant="cuartos" side="left paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} />
+          <BCol ids={["P101"]} label="Semifinal" variant="semi" side="left solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} />
           <div className="bcol center-col">
             <div className="final-wrapper">
               <div className="rnd-hdr final">🏆 Gran Final</div>
-              <BracketMatch match={bracket.final} scores={scores} onOpen={openModal} showToast={showToast} />
+              <BracketMatch match={bracket.final} scores={scores} onOpen={openModal} />
             </div>
             <div className="third-place-wrapper">
               <div className="rnd-hdr third">🥉 Tercer Puesto</div>
               <div className="match-third">
-                <BracketMatch match={bracket.thirdMatch} scores={scores} onOpen={openModal} showToast={showToast} />
+                <BracketMatch match={bracket.thirdMatch} scores={scores} onOpen={openModal} />
               </div>
             </div>
           </div>
-          <BCol ids={["P102"]} label="Semifinal" variant="semi" side="right solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
-          <BCol ids={["P99","P100"]} label="Cuartos" variant="cuartos" side="right paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
-          <BCol ids={["P93","P94","P95","P96"]} label="Octavos" variant="octavos" side="right paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
-          <BCol ids={["P81","P82","P83","P84","P85","P87","P86","P88"]} label="16vos" variant="dieciseis" side="right paired" bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
+          <BCol ids={["P102"]} label="Semifinal" variant="semi" side="right solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} />
+          <BCol ids={["P99","P100"]} label="Cuartos" variant="cuartos" side="right paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} />
+          <BCol ids={["P93","P94","P95","P96"]} label="Octavos" variant="octavos" side="right paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} />
+          <BCol ids={["P81","P82","P83","P84","P85","P87","P86","P88"]} label="16vos" variant="dieciseis" side="right paired" bfm={bfm} scores={scores} openModal={openModal} />
         </div>
       </div>
     </div>
@@ -184,6 +202,8 @@ PlayoffView.propTypes = {
   openModal: PropTypes.func.isRequired,
   zoom: PropTypes.number.isRequired,
   setZoom: PropTypes.func.isRequired,
-  showToast: PropTypes.func.isRequired,
-  allBracketMatches: PropTypes.array.isRequired
+  vpRef: PropTypes.oneOfType([PropTypes.func, PropTypes.shape({ current: PropTypes.any })]),
+  onMouseDown: PropTypes.func,
+  allBracketMatches: PropTypes.array.isRequired,
+  showToast: PropTypes.func.isRequired
 };

@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy, Suspense } from "react";
-import PropTypes from "prop-types";
 import { TEAMS, GROUPS, R32_STRUCTURE, QF_STRUCTURE, SF4_STRUCTURE, SF2_STRUCTURE } from "./data";
 import { generateOfficialPDF } from "./pdfEngine";
 import "./styles.css";

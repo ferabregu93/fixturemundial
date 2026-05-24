@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { TEAMS } from "./data";
 
 export default function ThirdsView({ allThirds }) {
@@ -20,3 +21,7 @@ export default function ThirdsView({ allThirds }) {
     </div>
   );
 }
+
+ThirdsView.propTypes = {
+  allThirds: PropTypes.array.isRequired
+};

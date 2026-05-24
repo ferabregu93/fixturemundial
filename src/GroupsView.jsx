@@ -1,7 +1,8 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { GROUPS, TEAMS } from "./data";
 
-export default function GroupsView({ allTables, fixture, setGroupScore }) {
+export default function GroupsView({ allTables, fixture, setGroupScore, hoveredTeam, setHoveredTeam }) {
   return (
     <div className="gg">
       {Object.entries(GROUPS).map(([grp]) => (
@@ -81,3 +82,11 @@ export default function GroupsView({ allTables, fixture, setGroupScore }) {
     </div>
   );
 }
+
+GroupsView.propTypes = {
+  allTables: PropTypes.object.isRequired,
+  fixture: PropTypes.object.isRequired,
+  setGroupScore: PropTypes.func.isRequired,
+  hoveredTeam: PropTypes.string,
+  setHoveredTeam: PropTypes.func
+};
