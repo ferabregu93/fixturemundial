@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
+import PropTypes from "prop-types";
 import { TEAMS } from "./data";
 
-function BracketMatch({ match, scores, onOpen }) {
+function BracketMatch({ match, scores, onOpen, showToast }) {
   if (!match) return <div style={{ height: 52 }} />;
   const s = scores[match.id] || {};
   const isTBD = match.home === "---" && match.away === "---";
@@ -12,7 +13,14 @@ function BracketMatch({ match, scores, onOpen }) {
   })();
   const hasWinner = winner !== null;
   return (
-    <div className={`bm ${isTBD ? "tbd" : ""} ${hasWinner ? "has-winner" : ""}`} onClick={() => !isTBD && onOpen(match)} title={match.label}>
+    <div 
+      className={`bm ${isTBD ? "tbd" : ""} ${hasWinner ? "has-winner" : ""}`} 
+      onClick={() => !isTBD && onOpen(match)} 
+      title={match.label}
+      role="button"
+      tabIndex={isTBD ? -1 : 0}
+      onKeyDown={(e) => e.key === 'Enter' && !isTBD && onOpen(match)}
+    >
       <div className="bm-lbl">{match.label}</div>
         {[{ id: match.home, sc: s.gh }, { id: match.away, sc: s.ga }].map(({ id: tid, sc }, ri) => {
         const t = TEAMS[tid]; const isW = winner === tid; const isL = winner && winner !== tid;
@@ -27,15 +35,21 @@ function BracketMatch({ match, scores, onOpen }) {
   );
 }
 
-const BCol = ({ ids, label, variant, side, mt, bfm, scores, openModal }) => (
+const BCol = ({ ids, label, variant, side, mt, bfm, scores, openModal, showToast }) => (
   <div className={`bcol ${side}`} style={{ paddingTop: mt || 0 }}>
     <div className={`rnd-hdr ${variant}`}>{label}</div>
-    {ids.map(id => <BracketMatch key={id} match={bfm(id)} scores={scores} onOpen={openModal} />)}
+    {ids.map(id => <BracketMatch key={id} match={bfm(id)} scores={scores} onOpen={openModal} showToast={showToast} />)}
   </div>
 );
 
-export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom, vpRef, onMouseDown, allBracketMatches }) {
-  const bfm = id => allBracketMatches.find(x => x.id === id);
+export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom, vpRef, onMouseDown, allBracketMatches, showToast }) {
+  const matchMap = useMemo(() => {
+    const map = {};
+    allBracketMatches.forEach(m => { if (m) map[m.id] = m; });
+    return map;
+  }, [allBracketMatches]);
+
+  const bfm = id => matchMap[id];
   const outerRef = useRef(null);
 
   const toggleFullScreen = async () => {
@@ -72,20 +86,26 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
       });
     }
 
-    const canvas = await window.html2canvas(canvasEl, {
-      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-panel').trim() || "#12121A",
-      scale: 2, // Mejor calidad para compartir
-      useCORS: true,
-      onclone: (clonedDoc) => {
-        const clonedCanvas = clonedDoc.querySelector(".bracket-canvas");
-        if (clonedCanvas) clonedCanvas.style.transform = "none";
-      }
-    });
+    try {
+      const canvas = await window.html2canvas(canvasEl, {
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-panel').trim() || "#12121A",
+        scale: 2,
+        useCORS: true,
+        onclone: (clonedDoc) => {
+          const clonedCanvas = clonedDoc.querySelector(".bracket-canvas");
+          if (clonedCanvas) clonedCanvas.style.transform = "none";
+        }
+      });
 
-    const link = document.createElement("a");
-    link.download = "llave_mundial_2026.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+      const link = document.createElement("a");
+      link.download = "llave_mundial_2026.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      showToast("📸 Captura descargada correctamente");
+    } catch (error) {
+      showToast("❌ Error al generar la captura");
+      console.error("html2canvas error:", error);
+    }
   };
 
   // Implementación de Pinch-to-Zoom para móviles
@@ -132,28 +152,38 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
       </div>
       <div className="bracket-viewport" ref={vpRef} onMouseDown={onMouseDown} style={{ height: "65vh" }}>
         <div className="bracket-canvas" style={{ transform: `scale(${zoom})` }}>
-          <BCol ids={["P73","P74","P75","P77","P76","P78","P79","P80"]} label="16vos" variant="dieciseis" side="left paired" bfm={bfm} scores={scores} openModal={openModal} />
-          <BCol ids={["P89","P90","P91","P92"]} label="Octavos" variant="octavos" side="left paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} />
-          <BCol ids={["P97","P98"]} label="Cuartos" variant="cuartos" side="left paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} />
-          <BCol ids={["P101"]} label="Semifinal" variant="semi" side="left solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} />
+          <BCol ids={["P73","P74","P75","P77","P76","P78","P79","P80"]} label="16vos" variant="dieciseis" side="left paired" bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
+          <BCol ids={["P89","P90","P91","P92"]} label="Octavos" variant="octavos" side="left paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
+          <BCol ids={["P97","P98"]} label="Cuartos" variant="cuartos" side="left paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
+          <BCol ids={["P101"]} label="Semifinal" variant="semi" side="left solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
           <div className="bcol center-col">
             <div className="final-wrapper">
               <div className="rnd-hdr final">🏆 Gran Final</div>
-              <BracketMatch match={bracket.final} scores={scores} onOpen={openModal} />
+              <BracketMatch match={bracket.final} scores={scores} onOpen={openModal} showToast={showToast} />
             </div>
             <div className="third-place-wrapper">
               <div className="rnd-hdr third">🥉 Tercer Puesto</div>
               <div className="match-third">
-                <BracketMatch match={bracket.thirdMatch} scores={scores} onOpen={openModal} />
+                <BracketMatch match={bracket.thirdMatch} scores={scores} onOpen={openModal} showToast={showToast} />
               </div>
             </div>
           </div>
-          <BCol ids={["P102"]} label="Semifinal" variant="semi" side="right solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} />
-          <BCol ids={["P99","P100"]} label="Cuartos" variant="cuartos" side="right paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} />
-          <BCol ids={["P93","P94","P95","P96"]} label="Octavos" variant="octavos" side="right paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} />
-          <BCol ids={["P81","P82","P83","P84","P85","P87","P86","P88"]} label="16vos" variant="dieciseis" side="right paired" bfm={bfm} scores={scores} openModal={openModal} />
+          <BCol ids={["P102"]} label="Semifinal" variant="semi" side="right solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
+          <BCol ids={["P99","P100"]} label="Cuartos" variant="cuartos" side="right paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
+          <BCol ids={["P93","P94","P95","P96"]} label="Octavos" variant="octavos" side="right paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
+          <BCol ids={["P81","P82","P83","P84","P85","P87","P86","P88"]} label="16vos" variant="dieciseis" side="right paired" bfm={bfm} scores={scores} openModal={openModal} showToast={showToast} />
         </div>
       </div>
     </div>
   );
 }
+
+PlayoffView.propTypes = {
+  bracket: PropTypes.object.isRequired,
+  scores: PropTypes.object.isRequired,
+  openModal: PropTypes.func.isRequired,
+  zoom: PropTypes.number.isRequired,
+  setZoom: PropTypes.func.isRequired,
+  showToast: PropTypes.func.isRequired,
+  allBracketMatches: PropTypes.array.isRequired
+};
