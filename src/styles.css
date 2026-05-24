@@ -94,7 +94,7 @@ body {
 
 /* Groups Grid */
 .gg { 
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
   gap: 24px; margin-top: 20px; 
 }
 .gcard { 
@@ -102,7 +102,7 @@ body {
   overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 .ghead { 
-  background: var(--bg-panel); padding: 16px 20px; display: flex; align-items: center;
+  background: var(--bg-panel); padding: 10px 15px; display: flex; align-items: center;
   border-bottom: 1px solid var(--border);
 }
 .gltr { font-size: 24px; font-weight: 900; color: var(--gold); font-family: 'Barlow Condensed'; }
@@ -110,9 +110,19 @@ body {
 /* Table Styles */
 .gtbl { padding: 12px; }
 .trow { 
-  display: grid; grid-template-columns: 25px 1fr 30px 35px 30px 30px 35px; align-items: center; 
-  padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; font-size: 14px;
+  display: grid; grid-template-columns: 20px 1fr 22px 30px 22px 22px 28px; align-items: center; 
+  padding: 5px 10px; border-radius: 6px; margin-bottom: 2px; font-size: 13px;
   transition: background 0.2s ease;
+}
+.rank-header {
+  font-weight: 800;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  grid-template-columns: 40px 1fr 100px 40px 40px 40px 40px !important;
 }
 .trow.interactive:hover {
   background: var(--win-bg);
@@ -135,8 +145,8 @@ body {
 
 /* Match Styles in Groups */
 .msec { 
-  padding: 16px 12px; 
-  border-top: 2px solid var(--border); 
+  padding: 12px 10px; 
+  border-top: 1px solid var(--border); 
   background: rgba(212, 160, 23, 0.03); /* Fondo sutilmente diferente para edición */
 }
 .msec-title { 

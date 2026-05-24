@@ -8,14 +8,13 @@ export default function GroupsView({ allTables, fixture, setGroupScore, hoveredT
       {Object.entries(GROUPS).map(([grp]) => (
         <div key={grp} className="gcard">
           <div className="ghead">
-            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 8, alignItems: 'center' }}>
               <div className="glabel">Grupo {grp}</div>
-              <div style={{ display: 'flex', gap: 20, width: '100%', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: 15, width: '100%', justifyContent: 'center' }}>
                 {GROUPS[grp].teams.map(t => (
-                  <div key={t} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60, gap: 4 }}>
-                    <div style={{ fontSize: '20px' }}>{TEAMS[t]?.flag}</div>
-                    <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--gold)', letterSpacing: '1px' }}>{t}</div>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text)', textAlign: 'center', lineHeight: 1.3, maxWidth: 60 }}>{TEAMS[t]?.name || t}</div>
+                  <div key={t} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 45, gap: 2 }}>
+                    <div style={{ fontSize: '18px' }}>{TEAMS[t]?.flag}</div>
+                    <div style={{ fontSize: '12px', fontWeight: 900, color: 'var(--gold)' }}>{t}</div>
                   </div>
                 ))}
               </div>
