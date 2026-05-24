@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import PropTypes from "prop-types";
 import { TEAMS, GROUPS, R32_STRUCTURE, QF_STRUCTURE, SF4_STRUCTURE, SF2_STRUCTURE } from "./data";
 import { generateOfficialPDF } from "./pdfEngine";
 import "./styles.css";
@@ -165,7 +166,7 @@ export default function App() {
   const allThirds = useMemo(() => {
     return Object.entries(allTables)
       .map(([grp, tbl]) => ({ ...tbl[2], grp }))
-      .filter(t => t && t.pj > 0)
+      .filter(t => t && t.id && t.pj !== undefined)
       .sort((a, b) => {
         if (b.pts !== a.pts) return b.pts - a.pts;
         if (b.dg !== a.dg) return b.dg - a.dg;
@@ -273,6 +274,32 @@ export default function App() {
     showToast("📊 Datos exportados en CSV");
   };
 
+  // Soporte Touch para el viewport de la llave
+  useEffect(() => {
+    const el = vpRef.current;
+    if (!el) return;
+    
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        dragRef.current = { dragging: true, sx: touch.clientX, sy: touch.clientY, sl: el.scrollLeft, st: el.scrollTop };
+      }
+    };
+    const handleTouchMove = (e) => {
+      if (!dragRef.current.dragging || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      el.scrollLeft = dragRef.current.sl - (touch.clientX - dragRef.current.sx);
+      el.scrollTop = dragRef.current.st - (touch.clientY - dragRef.current.sy);
+    };
+    
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchmove", handleTouchMove, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
+
   return (
     <div className="app">
       <button className="theme-toggle" onClick={toggleTheme}>
@@ -331,6 +358,7 @@ export default function App() {
             vpRef={vpRef} 
             onMouseDown={onMouseDown} 
             allBracketMatches={allBracketMatches}
+            showToast={showToast}
           />
         )}
       </Suspense>
@@ -366,13 +394,15 @@ export default function App() {
             <div className="modal-inputs">
               <div className="modal-stepper">
                 <button className="step-btn-lg" onClick={() => { setMH(prev => Math.max(0, (parseInt(prev) || 0) - 1).toString()); setMWin(null); }}>▾</button>
-                <input type="number" className="mi with-stepper" value={mH} onChange={e => { setMH(e.target.value); setMWin(null); }} placeholder="0" />
+                <input type="number" aria-label={`Goles ${TEAMS[modal.home]?.name}`} className="mi with-stepper" 
+                       value={mH} onChange={e => { setMH(e.target.value); setMWin(null); }} placeholder="0" />
                 <button className="step-btn-lg" onClick={() => { setMH(prev => Math.min(99, (parseInt(prev) || 0) + 1).toString()); setMWin(null); }}>▴</button>
               </div>
               <span style={{ fontSize: 24, fontWeight: 900, color: "var(--muted)" }}>:</span>
               <div className="modal-stepper">
                 <button className="step-btn-lg" onClick={() => { setMA(prev => Math.max(0, (parseInt(prev) || 0) - 1).toString()); setMWin(null); }}>▾</button>
-                <input type="number" className="mi with-stepper" value={mA} onChange={e => { setMA(e.target.value); setMWin(null); }} placeholder="0" />
+                <input type="number" aria-label={`Goles ${TEAMS[modal.away]?.name}`} className="mi with-stepper" 
+                       value={mA} onChange={e => { setMA(e.target.value); setMWin(null); }} placeholder="0" />
                 <button className="step-btn-lg" onClick={() => { setMA(prev => Math.min(99, (parseInt(prev) || 0) + 1).toString()); setMWin(null); }}>▴</button>
               </div>
             </div>
@@ -397,7 +427,7 @@ export default function App() {
         </div>
       )}
 
-      {toast && <div className="toast">{toast}</div>}
+      {toast && <div className="toast" role="alert" aria-live="polite">{toast}</div>}
     </div>
   );
 }
