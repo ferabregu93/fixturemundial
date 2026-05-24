@@ -229,7 +229,13 @@ export default function App() {
 
   const confirmModal = () => {
     if (!modal) return;
-    const h = parseInt(mH), a = parseInt(mA);
+
+    let finalH = mH;
+    let finalA = mA;
+    if (finalH !== "" && finalA === "") finalA = "0";
+    if (finalA !== "" && finalH === "") finalH = "0";
+
+    const h = parseInt(finalH), a = parseInt(finalA);
     let winner = mWin;
     if (!winner && !isNaN(h) && !isNaN(a)) { if (h > a) winner = modal.home; else if (a > h) winner = modal.away; }
 
@@ -248,7 +254,7 @@ export default function App() {
       document.head.appendChild(script);
     }
 
-    setScores(prev => ({ ...prev, [modal.id]: { gh: mH, ga: mA, winner } }));
+    setScores(prev => ({ ...prev, [modal.id]: { gh: finalH, ga: finalA, winner } }));
     setModal(null);
     showToast("✓ Resultado guardado");
   };
@@ -392,7 +398,11 @@ export default function App() {
             </div>
             <div className="modal-inputs">
               <div className="modal-stepper">
-                <button className="step-btn-lg" onClick={() => { setMH(prev => Math.max(0, (parseInt(prev) || 0) - 1).toString()); setMWin(null); }}>▾</button>
+                <button className="step-btn-lg" onClick={() => { 
+                  setMH(prev => Math.max(0, (parseInt(prev) || 0) - 1).toString()); 
+                  if (mA === "") setMA("0");
+                  setMWin(null); 
+                }}>▾</button>
                 <input 
                   type="number" 
                   onFocus={e => e.target.select()}
@@ -402,11 +412,19 @@ export default function App() {
                   onChange={e => { setMH(e.target.value); setMWin(null); }} 
                   placeholder="0" 
                 />
-                <button className="step-btn-lg" onClick={() => { setMH(prev => Math.min(99, (parseInt(prev) || 0) + 1).toString()); setMWin(null); }}>▴</button>
+                <button className="step-btn-lg" onClick={() => { 
+                  setMH(prev => Math.min(99, (parseInt(prev) || 0) + 1).toString()); 
+                  if (mA === "") setMA("0");
+                  setMWin(null); 
+                }}>▴</button>
               </div>
               <span style={{ fontSize: 24, fontWeight: 900, color: "var(--muted)" }}>:</span>
               <div className="modal-stepper">
-                <button className="step-btn-lg" onClick={() => { setMA(prev => Math.max(0, (parseInt(prev) || 0) - 1).toString()); setMWin(null); }}>▾</button>
+                <button className="step-btn-lg" onClick={() => { 
+                  setMA(prev => Math.max(0, (parseInt(prev) || 0) - 1).toString()); 
+                  if (mH === "") setMH("0");
+                  setMWin(null); 
+                }}>▾</button>
                 <input 
                   type="number" 
                   onFocus={e => e.target.select()}
@@ -416,7 +434,11 @@ export default function App() {
                   onChange={e => { setMA(e.target.value); setMWin(null); }} 
                   placeholder="0" 
                 />
-                <button className="step-btn-lg" onClick={() => { setMA(prev => Math.min(99, (parseInt(prev) || 0) + 1).toString()); setMWin(null); }}>▴</button>
+                <button className="step-btn-lg" onClick={() => { 
+                  setMA(prev => Math.min(99, (parseInt(prev) || 0) + 1).toString()); 
+                  if (mH === "") setMH("0");
+                  setMWin(null); 
+                }}>▴</button>
               </div>
             </div>
             {mH === mA && mH !== "" && (
