@@ -377,7 +377,7 @@ export default function App() {
       {/* MODAL PREMIUM DE RESULTADOS */}
       {modal && (
         <div className="overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
-          <div className="modal">
+          <div className="modal" onKeyDown={e => e.key === 'Enter' && confirmModal()}>
             <div className="modal-title">Carga de Resultado</div>
             <div className="modal-teams">
               <div className="modal-team">
@@ -393,15 +393,29 @@ export default function App() {
             <div className="modal-inputs">
               <div className="modal-stepper">
                 <button className="step-btn-lg" onClick={() => { setMH(prev => Math.max(0, (parseInt(prev) || 0) - 1).toString()); setMWin(null); }}>▾</button>
-                <input type="number" aria-label={`Goles ${TEAMS[modal.home]?.name}`} className="mi with-stepper" 
-                       value={mH} onChange={e => { setMH(e.target.value); setMWin(null); }} placeholder="0" />
+                <input 
+                  type="number" 
+                  onFocus={e => e.target.select()}
+                  aria-label={`Goles ${TEAMS[modal.home]?.name}`} 
+                  className="mi with-stepper" 
+                  value={mH} 
+                  onChange={e => { setMH(e.target.value); setMWin(null); }} 
+                  placeholder="0" 
+                />
                 <button className="step-btn-lg" onClick={() => { setMH(prev => Math.min(99, (parseInt(prev) || 0) + 1).toString()); setMWin(null); }}>▴</button>
               </div>
               <span style={{ fontSize: 24, fontWeight: 900, color: "var(--muted)" }}>:</span>
               <div className="modal-stepper">
                 <button className="step-btn-lg" onClick={() => { setMA(prev => Math.max(0, (parseInt(prev) || 0) - 1).toString()); setMWin(null); }}>▾</button>
-                <input type="number" aria-label={`Goles ${TEAMS[modal.away]?.name}`} className="mi with-stepper" 
-                       value={mA} onChange={e => { setMA(e.target.value); setMWin(null); }} placeholder="0" />
+                <input 
+                  type="number" 
+                  onFocus={e => e.target.select()}
+                  aria-label={`Goles ${TEAMS[modal.away]?.name}`} 
+                  className="mi with-stepper" 
+                  value={mA} 
+                  onChange={e => { setMA(e.target.value); setMWin(null); }} 
+                  placeholder="0" 
+                />
                 <button className="step-btn-lg" onClick={() => { setMA(prev => Math.min(99, (parseInt(prev) || 0) + 1).toString()); setMWin(null); }}>▴</button>
               </div>
             </div>

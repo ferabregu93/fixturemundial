@@ -197,12 +197,20 @@ body {
 
 /* Bracket Layout */
 .bracket-outer { 
+  display: flex;
+  flex-direction: column;
   position: relative; border: 1px solid var(--border); border-radius: 24px; 
   overflow: hidden; background: var(--bg-panel);
   box-shadow: inset 0 0 80px rgba(0,0,0,0.4);
 }
 .bracket-zoom-controls {
-  position: absolute; top: 24px; left: 24px; z-index: 100; display: flex; gap: 10px;
+  display: flex; 
+  gap: 10px;
+  padding: 16px 24px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  z-index: 101;
+  flex-wrap: wrap;
 }
 .zc-btn {
   width: 44px; height: 44px; background: var(--bg-card); border: 1px solid var(--border);
@@ -211,6 +219,42 @@ body {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .zc-btn:hover { background: var(--win-bg); border-color: var(--gold); transform: translateY(-2px); }
+.zc-btn.active {
+  background: var(--gold);
+  color: #000;
+  border-color: var(--gold);
+}
+.zc-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 4px;
+  align-self: center;
+}
+
+.bracket-list-view {
+  background: var(--bg-panel);
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+}
+.list-round {
+  margin-bottom: 48px;
+}
+.list-round h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+.list-matches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
 
 .bracket-viewport { 
   overflow: auto; cursor: grab; padding: 0; scrollbar-width: none;
@@ -371,7 +415,6 @@ body {
   .theme-toggle { top: 12px; right: 12px; padding: 6px 12px; font-size: 10px; }
   .header { padding: 80px 0 20px; }
   .htitle { font-size: 40px; }
-  .fullname { display: none; } /* Ocultar nombres largos en móvil */
   .stats-bar { gap: 10px; margin-bottom: 20px; }
   .schip { padding: 8px 12px; min-width: 80px; }
   .schip-val { font-size: 18px; }
