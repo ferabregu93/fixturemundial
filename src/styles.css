@@ -329,6 +329,7 @@ body {
   transition: all 0.2s;
 }
 .ebtn:hover { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 20px var(--win-bg); }
+.ebtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Control Tema */
 .theme-toggle {

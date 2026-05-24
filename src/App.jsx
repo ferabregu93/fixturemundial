@@ -145,6 +145,54 @@ export default function App() {
     window.removeEventListener("mouseup", onMouseUp);
   };
 
+  // Motor de captura de Reporte Completo (Infografía para amigos)
+  const downloadPredictionImage = async () => {
+    const reportEl = document.getElementById("full-prediction-report");
+    if (!reportEl) return;
+    
+    setExporting(true);
+    showToast("📸 Generando reporte de predicción...");
+
+    // Carga dinámica de html2canvas
+    if (!window.html2canvas) {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+      await new Promise(r => { script.onload = r; document.head.appendChild(script); });
+    }
+
+    try {
+      // Hacemos el elemento visible temporalmente para la captura
+      reportEl.style.display = "block";
+      
+      const canvas = await window.html2canvas(reportEl, {
+        backgroundColor: theme === "dark" ? "#0A0A0F" : "#F4F6F8",
+        scale: 2, // Alta resolución para WhatsApp
+        useCORS: true,
+        logging: false,
+        onclone: (clonedDoc) => {
+          // Asegurar que el clon sea visible
+          const el = clonedDoc.getElementById("full-prediction-report");
+          if (el) el.style.display = "block";
+        }
+      });
+
+      // Volvemos a ocultar
+      reportEl.style.display = "none";
+
+      const link = document.createElement("a");
+      link.download = `prediccion_mundial_${userName || "2026"}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      
+      showToast("✅ Reporte descargado. ¡Compártelo!");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Error al generar imagen");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // ─────────────────────────────────────────────
   // MATRIZ DE CÁLCULO REACTIVO (useMemo)
   // ─────────────────────────────────────────────
@@ -374,6 +422,7 @@ export default function App() {
         <input type="text" placeholder="Tu Nombre / Entidad" value={userName} onChange={e => setUserName(e.target.value)} 
                style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text)", border: "1px solid var(--border)", marginBottom: "16px" }} />
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <button className="ebtn" style={{ background: "var(--gold)", color: "#000", border: "none" }} onClick={downloadPredictionImage} disabled={exporting}>📸 Descargar Imagen de Predicción</button>
           <button className="ebtn" onClick={() => handleExport(false)} disabled={exporting}>📄 Inyectar PDF Oficial</button>
           <button className="ebtn" onClick={() => handleExport(true)} disabled={exporting} style={{ borderColor: "#E53935", color: "#E53935" }}>🛠 Modo Calibración</button>
           <button className="ebtn" onClick={exportCSV} style={{ borderColor: "var(--accent-blue)", color: "var(--accent-blue)" }}>📊 Exportar Datos (CSV)</button>
@@ -463,6 +512,46 @@ export default function App() {
       )}
 
       {toast && <div className="toast" role="alert" aria-live="polite">{toast}</div>}
+
+      {/* CONTENEDOR OCULTO PARA EXPORTACIÓN (Solo se usa para generar la imagen) */}
+      <div id="full-prediction-report" style={{ display: "none", width: "1200px", padding: "60px", background: "var(--bg-main)" }}>
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <h1 style={{ color: "var(--gold)", fontSize: "48px", fontFamily: "Barlow Condensed" }}>MI PREDICCIÓN MUNDIAL 2026</h1>
+          <p style={{ color: "var(--muted)", letterSpacing: "4px" }}>{userName ? `POR: ${userName.toUpperCase()}` : "SIMULADOR OFICIAL"}</p>
+        </div>
+        
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "15px", marginBottom: "50px" }}>
+           {Object.keys(GROUPS).map(g => (
+             <div key={g} style={{ background: "var(--bg-card)", padding: "15px", borderRadius: "12px", border: "1px solid var(--border)" }}>
+               <div style={{ color: "var(--gold)", fontWeight: "bold", marginBottom: "10px", fontSize: "14px" }}>GRUPO {g}</div>
+               {allTables[g].map((t, idx) => (
+                 <div key={t.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", padding: "3px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: idx < 2 ? 1 : 0.5 }}>
+                   <span>{idx+1}. {TEAMS[t.id]?.flag} {t.id}</span>
+                   <span style={{ fontWeight: "bold" }}>{t.pts} pts</span>
+                 </div>
+               ))}
+             </div>
+           ))}
+        </div>
+
+        <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "20px", border: "2px solid var(--gold)" }}>
+          <div style={{ textAlign: "center", color: "var(--gold)", fontWeight: "bold", marginBottom: "20px" }}>CAMINO A LA GLORIA</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+             <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: "14px", color: "var(--muted)" }}>CAMPEÓN</div>
+                <div style={{ fontSize: "32px", fontWeight: "900", color: "var(--gold)" }}>
+                  {bracket.champion ? `${TEAMS[bracket.champion]?.flag} ${TEAMS[bracket.champion]?.name}` : "---"}
+                </div>
+             </div>
+             <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: "14px", color: "var(--muted)" }}>TERCER PUESTO</div>
+                <div style={{ fontSize: "20px", fontWeight: "700" }}>
+                  {bracket.thirdPlace ? `${TEAMS[bracket.thirdPlace]?.flag} ${TEAMS[bracket.thirdPlace]?.name}` : "---"}
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
