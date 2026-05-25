@@ -52,17 +52,35 @@ function resolveR32Teams(allTables, bestThirds) {
     f[g] = tbl[0]?.pj > 0 ? tbl[0].id : null; 
     s[g] = tbl[1]?.pj > 0 ? tbl[1].id : null; 
   });
-  const t = bestThirds.map(x => (x.pj > 0 ? x.id : null));
+
+  // Lógica mejorada para asignar terceros evitando enfrentamientos del mismo grupo
+  const getThird = (avoidGrp, index) => {
+    const available = bestThirds.filter(t => t.id && t.pj > 0);
+    if (available.length === 0) return null;
+    
+    let selected = available[index % available.length];
+    // Si el tercero es del mismo grupo, intentamos el siguiente para evitar rematches
+    if (selected && selected.grp === avoidGrp) {
+      selected = available[(index + 1) % available.length];
+    }
+    return selected?.id || null;
+  };
+
   const sl = id => id || "---";
   return {
-    P73: { home: sl(s["A"]), away: sl(s["B"]) },  P74: { home: sl(f["E"]), away: sl(t[0]) },
-    P75: { home: sl(f["F"]), away: sl(s["C"]) },  P76: { home: sl(f["C"]), away: sl(s["F"]) },
-    P77: { home: sl(f["I"]), away: sl(t[1]) },    P78: { home: sl(s["E"]), away: sl(s["I"]) },
-    P79: { home: sl(f["A"]), away: sl(t[2]) },    P80: { home: sl(f["L"]), away: sl(t[3]) },
-    P81: { home: sl(f["D"]), away: sl(t[4]) },    P82: { home: sl(f["G"]), away: sl(t[5]) },
+    P73: { home: sl(s["A"]), away: sl(s["B"]) },
+    P74: { home: sl(f["E"]), away: sl(getThird("E", 0)) },
+    P75: { home: sl(f["F"]), away: sl(s["C"]) },
+    P76: { home: sl(f["C"]), away: sl(s["F"]) },
+    P77: { home: sl(f["I"]), away: sl(getThird("I", 1)) },
+    P78: { home: sl(s["E"]), away: sl(s["I"]) },
+    P79: { home: sl(f["A"]), away: sl(getThird("A", 2)) },
+    P80: { home: sl(f["L"]), away: sl(getThird("L", 3)) },
+    P81: { home: sl(f["D"]), away: sl(getThird("D", 4)) },
+    P82: { home: sl(f["G"]), away: sl(getThird("G", 5)) },
     P83: { home: sl(s["K"]), away: sl(s["L"]) },  P84: { home: sl(f["H"]), away: sl(s["J"]) },
-    P85: { home: sl(f["B"]), away: sl(t[6]) },    P86: { home: sl(f["J"]), away: sl(s["H"]) },
-    P87: { home: sl(f["K"]), away: sl(t[7]) },    P88: { home: sl(s["D"]), away: sl(s["G"]) },
+    P85: { home: sl(f["B"]), away: sl(getThird("B", 6)) },    P86: { home: sl(f["J"]), away: sl(s["H"]) },
+    P87: { home: sl(f["K"]), away: sl(getThird("K", 7)) },    P88: { home: sl(s["D"]), away: sl(s["G"]) },
   };
 }
 
@@ -439,6 +457,16 @@ export default function App() {
       </div>
       <div className="pbar"><div className="pfill" style={{ width: `${(playedMatches / 72) * 100}%` }} /></div>
 
+      {/* PANEL DE EXPORTACIÓN (Movido Arriba) */}
+      <div className="export-panel" style={{ marginTop: "0", marginBottom: "40px" }}>
+        <h3 className="text-gold" style={{ marginBottom: "16px" }}>Compartir Predicción</h3>
+        <input type="text" placeholder="Tu Nombre / Entidad" value={userName} onChange={e => setUserName(e.target.value)} 
+               style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text)", border: "1px solid var(--border)", marginBottom: "16px" }} />
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <button className="ebtn" style={{ background: "var(--gold)", color: "#000", border: "none" }} onClick={downloadPredictionImage} disabled={exporting}>📸 Descargar Imagen de Predicción</button>
+        </div>
+      </div>
+
       <div className="nav">
         <button className={`nbtn ${tab === "grupos" ? "active" : ""}`} onClick={() => setTab("grupos")}>Grupos</button>
         <button className={`nbtn ${tab === "terceros" ? "active" : ""}`} onClick={() => setTab("terceros")}>Terceros</button>
@@ -474,16 +502,6 @@ export default function App() {
           />
         )}
       </Suspense>
-
-      {/* PANEL DE EXPORTACIÓN */}
-      <div className="export-panel">
-        <h3 className="text-gold" style={{ marginBottom: "16px" }}>Compartir Predicción</h3>
-        <input type="text" placeholder="Tu Nombre / Entidad" value={userName} onChange={e => setUserName(e.target.value)} 
-               style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text)", border: "1px solid var(--border)", marginBottom: "16px" }} />
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <button className="ebtn" style={{ background: "var(--gold)", color: "#000", border: "none" }} onClick={downloadPredictionImage} disabled={exporting}>📸 Descargar Imagen de Predicción</button>
-        </div>
-      </div>
 
       {/* MODAL PREMIUM DE RESULTADOS */}
       {modal && (
@@ -566,6 +584,10 @@ export default function App() {
           </div>
         </div>
       )}
+
+      <footer style={{ textAlign: "center", marginTop: "60px", paddingBottom: "40px", fontSize: "12px", color: "var(--muted)", opacity: 0.6 }}>
+        Desarrollado por Fernando Abregu
+      </footer>
 
       {toast && <div className="toast" role="alert" aria-live="polite">{toast}</div>}
 
