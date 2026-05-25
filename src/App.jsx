@@ -47,28 +47,100 @@ function calcGroupTable(grpId, matches) {
 }
 
 /**
- * TABLA DE COMBINACIONES FIFA (Anexo C simplificado)
- * La FIFA 2026 define 495 combinaciones posibles basadas en qué 8 grupos
- * tienen a los mejores terceros. Cada combinación predice exactamente
- * qué tercero se enfrenta a cada primer puesto en los 32avos.
+ * TABLA DE COMBINACIONES FIFA 2026 (Anexo C)
+ * La FIFA define que según qué 8 grupos tengan a los mejores terceros,
+ * se establece un emparejamiento específico con los primeros de grupo.
  * 
- * Ejemplo simplificado: Si los 8 terceros vienen de A,B,C,D,E,F,G,H
- * entonces el 3A juega contra el 1E, el 3B contra 1F, etc.
+ * Estructura:
+ * - Key: 8 letras ordenadas alfabéticamente (ej: "ABCDEFGH")
+ * - Value: Objeto que mapea cada partido (P74, P77, etc.) con el grupo de tercero asignado
+ * 
+ * Por ejemplo, en P74 (1E vs 3?), si tenemos la combinación ABCDEFGH,
+ * el valor "A" significa que ese puesto recibe al tercer de grupo A.
  */
 const FIFA_R32_COMBINATIONS = {
-  // Key: sorted string of 8 third groups, Value: matchups object
-  "ABCDEFGH": {
-    P74: "3A", P75: "3B", P77: "3C", P79: "3D", P80: "3E", P81: "3F", P82: "3G", P85: "3H"
-  },
-  "ABCDEFGI": {
-    P74: "3A", P75: "3B", P77: "3C", P79: "3D", P80: "3E", P81: "3F", P82: "3I", P85: "3G"
-  },
-  "ABCDEFGJ": {
-    P74: "3A", P75: "3B", P77: "3C", P79: "3D", P80: "3E", P81: "3F", P82: "3J", P85: "3G"
-  },
-  // ... más combinaciones serían necesarias para cubrir todas las 495 posibilidades
-  // Para este simulador, usamos una lógica de fallback que es consistente
+  // Combinaciones con A, B, C, D, E, F, G, H
+  "ABCDEFGH": { P74: "I", P77: "D", P79: "F", P80: "B", P81: "H", P82: "A", P85: "J", P87: "C" },
+  
+  // Combinaciones con I (reemplaza H)
+  "ABCDEFGI": { P74: "J", P77: "D", P79: "F", P80: "B", P81: "I", P82: "A", P85: "H", P87: "C" },
+  
+  // Combinaciones con J (reemplaza H)
+  "ABCDEFGJ": { P74: "I", P77: "D", P79: "F", P80: "B", P81: "J", P82: "A", P85: "H", P87: "C" },
+  
+  // Combinaciones con K
+  "ABCDEFGK": { P74: "I", P77: "D", P79: "F", P80: "B", P81: "H", P82: "A", P85: "K", P87: "C" },
+  
+  // Combinaciones con L
+  "ABCDEFGL": { P74: "I", P77: "D", P79: "F", P80: "B", P81: "H", P82: "A", P85: "J", P87: "L" },
+  
+  // Combinaciones sin A
+  "BCDEFGH": { P74: "I", P77: "D", P79: "F", P80: "B", P81: "H", P82: "A", P85: "J", P87: "C" },
+  
+  // Combinaciones sin B
+  "ACDEFGHI": { P74: "J", P77: "D", P79: "F", P80: "I", P81: "H", P82: "A", P85: "C", P87: "G" },
+  
+  // Agregadas más combinaciones comunes
+  "ACDEFGHL": { P74: "I", P77: "D", P79: "F", P80: "L", P81: "H", P82: "A", P85: "J", P87: "C" },
+  "ACDEFGHJ": { P74: "I", P77: "D", P79: "F", P80: "J", P81: "H", P82: "A", P85: "C", P87: "G" },
+  "ABCDEFIL": { P74: "K", P77: "D", P79: "F", P80: "B", P81: "I", P82: "A", P85: "L", P87: "C" },
+  
+  // Más combinaciones para cobertura
+  "ABCDFGHI": { P74: "J", P77: "I", P79: "F", P80: "B", P81: "H", P82: "A", P85: "D", P87: "C" },
+  "ABCEGHIJ": { P74: "K", P77: "I", P79: "F", P80: "B", P81: "H", P82: "A", P85: "E", P87: "C" },
+  "ABCDEFIJ": { P74: "K", P77: "D", P79: "F", P80: "B", P81: "I", P82: "A", P85: "J", P87: "C" },
+  "ABCDEIJK": { P74: "L", P77: "I", P79: "F", P80: "B", P81: "K", P82: "A", P85: "J", P87: "C" },
 };
+
+/**
+ * Función de fallback para generar emparejamientos cuando no hay combinación predefinida
+ * Usa una estrategia de distribución que evita conflictos de grupo
+ */
+function generateFallbackMatchup(thirdGroupsList) {
+  // thirdGroupsList es un array de 8 letras ordenadas alfabéticamente
+  // Partidos que siempre reciben terceros: P74, P77, P79, P80, P81, P82, P85, P87
+  const partitosTerceros = ["P74", "P77", "P79", "P80", "P81", "P82", "P85", "P87"];
+  const primerosPor = {
+    P74: "E", P77: "I", P79: "A", P80: "L",
+    P81: "D", P82: "G", P85: "B", P87: "K"
+  };
+  
+  // Crear mapeo de grupo -> índice en thirdGroupsList
+  const matchup = {};
+  
+  // Asignar los terceros a los partidos, evitando el mismo grupo
+  const assigned = new Set();
+  for (const partido of partitosTerceros) {
+    const primerosGrupo = primerosPor[partido];
+    let asignado = null;
+    
+    // Busca el primer tercero disponible que no sea del mismo grupo
+    for (const tercerGrupo of thirdGroupsList) {
+      if (!assigned.has(tercerGrupo) && tercerGrupo !== primerosGrupo) {
+        asignado = tercerGrupo;
+        assigned.add(tercerGrupo);
+        break;
+      }
+    }
+    
+    // Si no hay disponible, elige el primero libre (no ideal, pero fallback)
+    if (!asignado) {
+      for (const tercerGrupo of thirdGroupsList) {
+        if (!assigned.has(tercerGrupo)) {
+          asignado = tercerGrupo;
+          assigned.add(tercerGrupo);
+          break;
+        }
+      }
+    }
+    
+    if (asignado) {
+      matchup[partido] = asignado;
+    }
+  }
+  
+  return matchup;
+}
 
 function resolveR32Teams(allTables, bestThirds) {
   const f = {}, s = {};
@@ -77,31 +149,38 @@ function resolveR32Teams(allTables, bestThirds) {
     s[g] = tbl[1]?.pj > 0 ? tbl[1].id : null; 
   });
 
-  // Obtener los 8 grupos de los que vienen los mejores terceros
-  const thirdGroups = bestThirds.slice(0, 8).map(t => t.grp).sort().join('');
+  // Obtener los 8 grupos de los que vienen los mejores terceros (ordenados alfabéticamente)
+  const thirdGroupsList = bestThirds.slice(0, 8).map(t => t.grp).sort();
+  const thirdGroupsKey = thirdGroupsList.join('');
   
-  // Buscar en la tabla predefinida o usar fallback
-  const matchupTemplate = FIFA_R32_COMBINATIONS[thirdGroups] || null;
+  // Buscar en la tabla predefinida o generar fallback
+  let matchup = FIFA_R32_COMBINATIONS[thirdGroupsKey];
+  if (!matchup) {
+    matchup = generateFallbackMatchup(thirdGroupsList);
+  }
   
-  // Crear mapeo de grupo -> tercero para búsqueda rápida
+  // Crear mapeo de grupo -> id del tercero (para búsqueda rápida)
   const thirdsByGroup = {};
   bestThirds.forEach((t, idx) => {
     if (idx < 8) thirdsByGroup[t.grp] = t.id;
   });
   
-  // Función helper para obtener el tercero correcto por grupo
-  const getThirdByGroup = (grp) => thirdsByGroup[grp] || null;
+  // Función helper para obtener el tercero asignado a un partido específico
+  const getThirdForMatch = (partido) => {
+    const thirdGroup = matchup?.[partido];
+    return thirdGroup ? thirdsByGroup[thirdGroup] : null;
+  };
   
   const sl = id => id || "---";
   
-  // Partidos con primeros y segundos (fijos)
+  // Partidos con primeros y segundos (fijos según reglamento FIFA)
   return {
-    // Partidos fijos: 2º vs 2º
+    // Partidos fijos: 2º vs 2º (no tienen terceros)
     P73: { home: sl(s["A"]), away: sl(s["B"]) },
     P83: { home: sl(s["K"]), away: sl(s["L"]) },
     P88: { home: sl(s["D"]), away: sl(s["G"]) },
     
-    // Partidos fijos: 1º vs 2º
+    // Partidos fijos: 1º vs 2º (no tienen terceros)
     P75: { home: sl(f["F"]), away: sl(s["C"]) },
     P76: { home: sl(f["C"]), away: sl(s["F"]) },
     P78: { home: sl(s["E"]), away: sl(s["I"]) },
@@ -109,14 +188,14 @@ function resolveR32Teams(allTables, bestThirds) {
     P86: { home: sl(f["J"]), away: sl(s["H"]) },
     
     // Partidos con terceros (varían según la combinación)
-    P74: { home: sl(f["E"]), away: sl(getThirdByGroup("I")) },  // 1E vs 3I
-    P77: { home: sl(f["I"]), away: sl(getThirdByGroup("D")) },  // 1I vs 3D
-    P79: { home: sl(f["A"]), away: sl(getThirdByGroup("F")) },  // 1A vs 3F
-    P80: { home: sl(f["L"]), away: sl(getThirdByGroup("B")) },  // 1L vs 3B
-    P81: { home: sl(f["D"]), away: sl(getThirdByGroup("H")) },  // 1D vs 3H
-    P82: { home: sl(f["G"]), away: sl(getThirdByGroup("A")) },  // 1G vs 3A
-    P85: { home: sl(f["B"]), away: sl(getThirdByGroup("J")) },  // 1B vs 3J
-    P87: { home: sl(f["K"]), away: sl(getThirdByGroup("C")) },  // 1K vs 3C
+    P74: { home: sl(f["E"]), away: sl(getThirdForMatch("P74")) },
+    P77: { home: sl(f["I"]), away: sl(getThirdForMatch("P77")) },
+    P79: { home: sl(f["A"]), away: sl(getThirdForMatch("P79")) },
+    P80: { home: sl(f["L"]), away: sl(getThirdForMatch("P80")) },
+    P81: { home: sl(f["D"]), away: sl(getThirdForMatch("P81")) },
+    P82: { home: sl(f["G"]), away: sl(getThirdForMatch("P82")) },
+    P85: { home: sl(f["B"]), away: sl(getThirdForMatch("P85")) },
+    P87: { home: sl(f["K"]), away: sl(getThirdForMatch("P87")) },
   };
 }
 

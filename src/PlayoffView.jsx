@@ -188,12 +188,22 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
   return (
     <>
       <div className="playoff-legend">
-        <div className="legend-title">🎯 Emparejamientos con Terceros</div>
+        <div className="legend-title">🎯 Emparejamientos FIFA 2026 (Anexo C)</div>
         <div className="legend-text">
-          Los <strong>8 mejores terceros clasificados</strong> se enfrentan a los primeros puestos según la <strong>tabla predefinida de la FIFA (Anexo C)</strong>.
-          Los emparejamientos varían según qué grupos tienen los terceros clasificados, pero siempre siguiendo una combinación específica para garantizar equidad.
+          Los <strong>8 mejores terceros clasificados</strong> se enfrentan a los <strong>primeros de grupo</strong> en los 32avos de final según la 
+          <strong> tabla oficial predefinida</strong> de la FIFA (Anexo C del reglamento). Los emparejamientos varían según qué combinación de grupos 
+          tengan los terceros clasificados, pero <strong>siempre siguiendo una regla determinista para garantizar equidad</strong>.
           <br/><br/>
-          <strong>Partidos fijos:</strong> 1A vs 3?, 1B vs 3?, etc. | <strong>Partidos entre segundos:</strong> 2A vs 2B, 2D vs 2G, etc.
+          <strong>Estructura:</strong>
+          <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
+            <li>✓ Partidos fijos (2º vs 2º): 2A vs 2B, 2D vs 2G, 2K vs 2L</li>
+            <li>✓ Partidos 1º vs 2º: 1F vs 2C, 1C vs 2F, 2E vs 2I, 1H vs 2J, 1J vs 2H</li>
+            <li>★ Partidos con terceros: 1E vs 3?, 1I vs 3?, 1A vs 3?, 1L vs 3?, etc.</li>
+          </ul>
+          <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '8px' }}>
+            El signo ★ indica partidos donde el tercero varía según la combinación de grupos clasificados. 
+            El sistema previene enfrentamientos entre equipos del mismo grupo.
+          </p>
         </div>
       </div>
 

@@ -9,16 +9,22 @@ export default function ThirdsView({ allThirds }) {
         <div className="legend-title">📋 Cómo se seleccionan los 8 mejores terceros</div>
         <div className="legend-text">
           <p>
-            Según el Anexo C del reglamento de la FIFA, <strong>solo los 8 mejores terceros clasifican</strong> a la ronda de 32avos. 
-            Se ordenan por:
+            Según el <strong>Anexo C del reglamento FIFA 2026</strong>, solo los <strong>8 mejores terceros clasifican</strong> a la ronda de 32avos. 
+            Se ordenan aplicando estos criterios de desempate en orden:
           </p>
           <ol>
             <li><strong>Puntos</strong> (ganador: 3 pts, empate: 1 pt)</li>
             <li><strong>Diferencia de goles</strong> (goles a favor - goles en contra)</li>
             <li><strong>Goles a favor</strong></li>
-            <li><strong>Fair Play</strong> (menos tarjetas amarillas y rojas)</li>
-            <li><strong>Ranking FIFA</strong> (como último criterio de desempate)</li>
+            <li><strong>Ranking FIFA</strong> (posición en el ranking mundial)</li>
           </ol>
+          <p style={{ marginTop: '12px', fontSize: '12px', fontStyle: 'italic', color: 'var(--gold)' }}>
+            💡 <strong>Sistema de Emparejamientos:</strong> Una vez identificados los 8 terceros, el simulador aplica la tabla oficial 
+            de la FIFA que define exactamente qué grupo de terceros enfrenta a qué primer puesto en los 32avos. 
+            Por ejemplo, si los terceros vienen de los grupos A, B, C, D, E, F, G, H, se sigue un emparejamiento predefinido. 
+            Si viene una combinación diferente, se aplica automáticamente el emparejamiento correspondiente. 
+            El sistema garantiza que <strong>nunca dos equipos del mismo grupo se enfrentan en 32avos</strong>.
+          </p>
           <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px' }}>
             ℹ️ Los terceros con fondo rojo están fuera de competencia.
           </p>

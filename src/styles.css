@@ -282,6 +282,22 @@ body {
   color: var(--text);
 }
 
+.playoff-legend .legend-text ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.playoff-legend .legend-text li {
+  margin-bottom: 6px;
+  color: var(--muted);
+  padding-left: 0;
+}
+
+.playoff-legend .legend-text strong {
+  color: var(--gold);
+  font-weight: 800;
+}
+
 .thirds-grid { 
   display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
   gap: 16px; 
