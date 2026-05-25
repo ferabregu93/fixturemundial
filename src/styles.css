@@ -114,6 +114,9 @@ body {
   padding: 5px 10px; border-radius: 6px; margin-bottom: 2px; font-size: 13px;
   transition: background 0.2s ease;
 }
+.ranking-card .trow {
+  grid-template-columns: 40px 1fr 100px 40px 40px 40px 40px;
+}
 .rank-header {
   font-weight: 800;
   font-size: 10px;
@@ -122,12 +125,37 @@ body {
   border-bottom: 1px solid var(--border);
   padding-bottom: 8px;
   margin-bottom: 10px;
-  grid-template-columns: 40px 1fr 100px 40px 40px 40px 40px !important;
 }
+.rank-header span.st { color: var(--gold); opacity: 0.8; }
+.round-col { text-align: left !important; padding-left: 10px; }
+.stat-col { width: 100%; text-align: center !important; }
 .trow.interactive:hover {
   background: var(--win-bg);
   cursor: pointer;
 }
+.history-modal { width: min(95vw, 500px); }
+.history-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 5px;
+}
+.history-item {
+  background: rgba(255,255,255,0.03);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.history-meta { font-size: 10px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; }
+.history-main { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.h-team { font-weight: 800; font-family: 'Barlow Condensed'; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.h-score { font-size: 20px; font-weight: 900; color: var(--text); background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 6px; white-space: nowrap; }
+.h-score.win { color: var(--gold); border: 1px solid var(--gold); }
+.h-score.loss { opacity: 0.6; }
+.penal-tag { font-size: 10px; color: var(--gold); vertical-align: middle; }
+
 .trow.ql { background: rgba(46, 125, 50, 0.1); color: var(--success); font-weight: 700; }
 .trow.th { background: rgba(212, 160, 23, 0.05); color: var(--gold); }
 .trow.el { opacity: 0.6; }
@@ -433,6 +461,10 @@ body {
   .nbtn { padding: 10px; font-size: 11px; flex: 1 1 45%; }
   .gg { grid-template-columns: 1fr; }
   .trow { grid-template-columns: 20px 1fr 25px 25px 25px 25px 30px; font-size: 12px; padding: 6px; }
+  .ranking-card .trow {
+    grid-template-columns: 35px 1fr 70px 35px 35px 35px 35px;
+  }
+  .ranking-card .fullname { display: none; }
   .mrow { grid-template-columns: 1fr 130px 1fr; }
   .modal { width: 95vw; padding: 20px; }
   .modal-team-flag { font-size: 30px; }

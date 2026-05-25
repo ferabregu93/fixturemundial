@@ -6,6 +6,7 @@ import "./styles.css";
 const GroupsView = lazy(() => import("./GroupsView"));
 const ThirdsView = lazy(() => import("./ThirdsView"));
 const PlayoffView = lazy(() => import("./PlayoffView"));
+const RankingView = lazy(() => import("./RankingView"));
 
 // ─────────────────────────────────────────────
 // LÓGICA DE SIMULACIÓN Y CÁLCULO
@@ -202,22 +203,6 @@ export default function App() {
     return t;
   }, [fixture]);
 
-  const topScoringTeam = useMemo(() => {
-    let top = { id: null, gf: -1 };
-    Object.values(allTables).flat().forEach(t => {
-      if (t.gf > top.gf) top = { id: t.id, gf: t.gf };
-    });
-    return top;
-  }, [allTables]);
-
-  const { playedMatches, totalGoals } = useMemo(() => {
-    return Object.values(fixture).flat().reduce((acc, match) => {
-      const h = parseInt(match.gh), a = parseInt(match.ga);
-      if (!isNaN(h) && !isNaN(a)) { acc.playedMatches++; acc.totalGoals += (h + a); }
-      return acc;
-    }, { playedMatches: 0, totalGoals: 0 });
-  }, [fixture]);
-
   const allThirds = useMemo(() => {
     return Object.entries(allTables)
       .map(([grp, tbl]) => ({ ...tbl[2], grp }))
@@ -267,6 +252,86 @@ export default function App() {
     ...bracket.r32, ...bracket.qf, ...bracket.sf4, ...bracket.sf2,
     bracket.final, bracket.thirdMatch
   ], [bracket]);
+
+  const fullRanking = useMemo(() => {
+    const stats = {};
+    // Inicializar con estadísticas de grupos
+    Object.values(allTables).flat().forEach(t => {
+      stats[t.id] = { ...t, round: 1, roundName: "Grupos" };
+    });
+
+    // Sumar estadísticas de Playoffs
+    allBracketMatches.forEach(m => {
+      const s = scores[m.id];
+      if (!s || s.gh === "" || s.ga === "") return;
+      const h = parseInt(s.gh), a = parseInt(s.ga);
+      
+      [ {id: m.home, gf: h, gc: a}, {id: m.away, gf: a, gc: h} ].forEach((team, idx) => {
+        const st = stats[team.id];
+        if (!st) return;
+        st.pj++;
+        st.gf += team.gf;
+        st.gc += team.gc;
+        st.dg = st.gf - st.gc;
+        // En eliminación directa, FIFA cuenta empate si va a penales (h === a)
+        if (team.gf > team.gc) st.pts += 3;
+        else if (team.gf === team.gc) st.pts += 1;
+      });
+    });
+
+    // Determinar Ronda Alcanzada (Pesos para ordenamiento)
+    const setR = (tid, val, name) => { 
+      if (tid && tid !== "---" && stats[tid] && stats[tid].round < val) { 
+        stats[tid].round = val; 
+        stats[tid].roundName = name; 
+      } 
+    };
+    
+    bracket.r32.forEach(m => { setR(m.home, 2, "16vos"); setR(m.away, 2, "16vos"); });
+    bracket.qf.forEach(m => { setR(m.home, 3, "Octavos"); setR(m.away, 3, "Octavos"); });
+    bracket.sf4.forEach(m => { setR(m.home, 4, "Cuartos"); setR(m.away, 4, "Cuartos"); });
+    bracket.sf2.forEach(m => { setR(m.home, 5, "Semis"); setR(m.away, 5, "Semis"); });
+    
+    const fMatch = bracket.final;
+    const tMatch = bracket.thirdMatch;
+    
+    const finalWinner = bracket.champion;
+    const finalLoser = finalWinner ? (finalWinner === fMatch.home ? fMatch.away : fMatch.home) : null;
+    const thirdWinner = bracket.thirdPlace;
+    const thirdLoser = thirdWinner ? (thirdWinner === tMatch.home ? tMatch.away : tMatch.home) : null;
+
+    if (thirdLoser && thirdLoser !== "---") setR(thirdLoser, 6, "4to Puesto");
+    if (thirdWinner && thirdWinner !== "---") setR(thirdWinner, 7, "3er Puesto");
+    if (finalLoser && finalLoser !== "---") setR(finalLoser, 8, "Subcampeón");
+    if (finalWinner && finalWinner !== "---") setR(finalWinner, 9, "Campeón");
+
+    return Object.values(stats).sort((a, b) => {
+      // 1. Prioridad: Ronda alcanzada
+      if (b.round !== a.round) return b.round - a.round;
+      // 2. Puntos acumulados
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      // 3. Diferencia de gol
+      if (b.dg !== a.dg) return b.dg - a.dg;
+      // 4. Goles a favor
+      return b.gf - a.gf;
+    });
+  }, [allTables, allBracketMatches, scores, bracket]);
+
+  const topScoringTeam = useMemo(() => {
+    let top = { id: null, gf: -1 };
+    Object.values(allTables).flat().forEach(t => {
+      if (t.gf > top.gf) top = { id: t.id, gf: t.gf };
+    });
+    return top;
+  }, [allTables]);
+
+  const { playedMatches, totalGoals } = useMemo(() => {
+    return Object.values(fixture).flat().reduce((acc, match) => {
+      const h = parseInt(match.gh), a = parseInt(match.ga);
+      if (!isNaN(h) && !isNaN(a)) { acc.playedMatches++; acc.totalGoals += (h + a); }
+      return acc;
+    }, { playedMatches: 0, totalGoals: 0 });
+  }, [fixture]);
 
   const bfm = id => allBracketMatches.find(x => x.id === id);
 
@@ -393,6 +458,7 @@ export default function App() {
       <div className="nav">
         <button className={`nbtn ${tab === "grupos" ? "active" : ""}`} onClick={() => setTab("grupos")}>Grupos</button>
         <button className={`nbtn ${tab === "terceros" ? "active" : ""}`} onClick={() => setTab("terceros")}>Terceros</button>
+        <button className={`nbtn ${tab === "ranking" ? "active" : ""}`} onClick={() => setTab("ranking")}>Ranking</button>
         <button className={`nbtn ${tab === "playoff" ? "active" : ""}`} onClick={() => setTab("playoff")}>Llave Final</button>
         <button className="nbtn" onClick={resetSimulation} style={{ borderColor: "var(--danger)", color: "var(--danger)" }}>Reiniciar</button>
       </div>
@@ -409,6 +475,7 @@ export default function App() {
           />
         )}
         {tab === "terceros" && <ThirdsView allThirds={allThirds} />}
+        {tab === "ranking" && <RankingView fullRanking={fullRanking} fixture={fixture} scores={scores} allBracketMatches={allBracketMatches} />}
         {tab === "playoff" && (
           <PlayoffView 
             bracket={bracket} 
@@ -670,6 +737,35 @@ export default function App() {
                </div>
             </div>
           ))}
+        </div>
+
+        {/* Ranking General en Reporte (3 columnas para 48 equipos) */}
+        <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "20px", border: "1px solid var(--gold)", marginBottom: "50px" }}>
+           <div style={{ color: "var(--gold)", fontWeight: "900", marginBottom: "25px", fontSize: "28px", textAlign: "center", textTransform: "uppercase", fontFamily: "Barlow Condensed", letterSpacing: "3px" }}>Tabla General del Torneo</div>
+           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "30px" }}>
+             {[0, 1, 2].map(colIdx => (
+               <div key={colIdx}>
+                 <div style={{ display: "grid", gridTemplateColumns: "35px 1fr 65px 35px", fontSize: "10px", color: "var(--muted)", fontWeight: "bold", paddingBottom: "8px", borderBottom: "1px solid var(--border)", marginBottom: "8px" }}>
+                   <span>POS</span>
+                   <span>SELECCIÓN</span>
+                   <span>RONDA</span>
+                   <span style={{ textAlign: "center" }}>PTS</span>
+                 </div>
+                 {fullRanking.slice(colIdx * 16, (colIdx + 1) * 16).map((team, i) => {
+                    const pos = colIdx * 16 + i + 1;
+                    const isTop4 = pos <= 4;
+                    return (
+                      <div key={team.id} style={{ display: "grid", gridTemplateColumns: "35px 1fr 65px 35px", alignItems: "center", fontSize: "11px", padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: team.round > 1 ? 1 : 0.45 }}>
+                        <span style={{ fontWeight: "900", color: isTop4 ? "var(--gold)" : "inherit" }}>{pos}</span>
+                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: team.round > 1 ? "bold" : "normal" }}>{TEAMS[team.id]?.flag} {team.id}</span>
+                        <span style={{ fontSize: "9px", textTransform: "uppercase", color: isTop4 ? "var(--gold)" : "var(--muted)", fontWeight: "bold" }}>{team.roundName}</span>
+                        <span style={{ textAlign: "center", fontWeight: "900", color: team.round > 1 ? "var(--gold)" : "inherit" }}>{team.pts}</span>
+                      </div>
+                    );
+                 })}
+               </div>
+             ))}
+           </div>
         </div>
 
         <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "20px", border: "2px solid var(--gold)" }}>
