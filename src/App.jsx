@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { TEAMS, GROUPS, R32_STRUCTURE, QF_STRUCTURE, SF4_STRUCTURE, SF2_STRUCTURE } from "./data";
-import { generateOfficialPDF } from "./pdfEngine";
+import confetti from 'canvas-confetti';
 import "./styles.css";
 
 const GroupsView = lazy(() => import("./GroupsView"));
@@ -384,17 +384,12 @@ export default function App() {
 
     // Disparar animación de confeti si se define el ganador de la gran final (P104)
     if (modal.id === "P104" && winner) {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js";
-      script.onload = () => {
-        window.confetti({
-          particleCount: 250,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#D4A017', '#F5C842', '#E8E8F0'] // Colores temáticos del simulador
-        });
-      };
-      document.head.appendChild(script);
+      confetti({
+        particleCount: 250,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#D4A017', '#F5C842', '#E8E8F0']
+      });
     }
 
     setScores(prev => ({ ...prev, [modal.id]: { gh: finalH, ga: finalA, winner } }));

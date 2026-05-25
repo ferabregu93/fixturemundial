@@ -120,8 +120,9 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
     if (!canvasEl) return;
 
     // Carga dinámica de html2canvas para no sobrecargar el bundle inicial
-    if (!window.html2canvas) {
+    if (!window.html2canvas && !document.getElementById('script-html2canvas')) {
       const script = document.createElement("script");
+      script.id = 'script-html2canvas';
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
       await new Promise((resolve) => {
         script.onload = resolve;

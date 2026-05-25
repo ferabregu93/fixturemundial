@@ -301,7 +301,7 @@ body {
 }
 .bracket-viewport:active { cursor: grabbing; }
 .bracket-canvas { 
-  display: flex; gap: 0; transform-origin: top left; transition: transform 0.1s ease-out;
+  display: flex; gap: 0; transform-origin: center center; transition: transform 0.1s ease-out;
   width: max-content;
   padding: 80px 40px;
 }

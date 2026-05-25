@@ -5,6 +5,9 @@ import { TEAMS } from "./data";
 export default function RankingView({ fullRanking, fixture, scores, allBracketMatches }) {
   const [selectedTeamId, setSelectedTeamId] = React.useState(null);
 
+  // Función auxiliar para detectar penales
+  const isPenalty = (s) => s.winner && s.gh !== "" && s.ga !== "" && parseInt(s.gh) === parseInt(s.ga);
+
   const teamMatches = React.useMemo(() => {
     if (!selectedTeamId) return [];
     
@@ -101,8 +104,6 @@ export default function RankingView({ fullRanking, fixture, scores, allBracketMa
     </div>
   );
 }
-
-const isPenalty = (s) => s.winner && s.gh !== "" && s.ga !== "" && parseInt(s.gh) === parseInt(s.ga);
 
 RankingView.propTypes = {
   fullRanking: PropTypes.array.isRequired,
