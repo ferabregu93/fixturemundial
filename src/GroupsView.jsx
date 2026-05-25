@@ -58,15 +58,15 @@ export default function GroupsView({ allTables, fixture, setGroupScore, hoveredT
                 </div>
                 <div className="sbox">
                   <div className="sbox-stepper">
-                    <button className="step-btn" onClick={() => setGroupScore(grp, i, "gh", (Math.max(0, (parseInt(m.gh) || 0) - 1)).toString())}>▾</button>
-                    <input type="number" className="sinput with-stepper" value={m.gh} onChange={e => setGroupScore(grp, i, "gh", e.target.value)} />
-                    <button className="step-btn" onClick={() => setGroupScore(grp, i, "gh", (Math.min(99, (parseInt(m.gh) || 0) + 1)).toString())}>▴</button>
+                    <button className="step-btn" aria-label="Menos goles local" onClick={() => setGroupScore(grp, i, "gh", (Math.max(0, (parseInt(m.gh) || 0) - 1)).toString())}>▾</button>
+                    <input type="number" aria-label={`Goles ${m.home}`} className="sinput with-stepper" value={m.gh} onChange={e => setGroupScore(grp, i, "gh", e.target.value)} />
+                    <button className="step-btn" aria-label="Más goles local" onClick={() => setGroupScore(grp, i, "gh", (Math.min(99, (parseInt(m.gh) || 0) + 1)).toString())}>▴</button>
                   </div>
                   <span className="ssep">:</span>
                   <div className="sbox-stepper">
-                    <button className="step-btn" onClick={() => setGroupScore(grp, i, "ga", (Math.max(0, (parseInt(m.ga) || 0) - 1)).toString())}>▾</button>
-                    <input type="number" className="sinput with-stepper" value={m.ga} onChange={e => setGroupScore(grp, i, "ga", e.target.value)} />
-                    <button className="step-btn" onClick={() => setGroupScore(grp, i, "ga", (Math.min(99, (parseInt(m.ga) || 0) + 1)).toString())}>▴</button>
+                    <button className="step-btn" aria-label="Menos goles visitante" onClick={() => setGroupScore(grp, i, "ga", (Math.max(0, (parseInt(m.ga) || 0) - 1)).toString())}>▾</button>
+                    <input type="number" aria-label={`Goles ${m.away}`} className="sinput with-stepper" value={m.ga} onChange={e => setGroupScore(grp, i, "ga", e.target.value)} />
+                    <button className="step-btn" aria-label="Más goles visitante" onClick={() => setGroupScore(grp, i, "ga", (Math.min(99, (parseInt(m.ga) || 0) + 1)).toString())}>▴</button>
                   </div>
                 </div>
                 <div className="mt aw">

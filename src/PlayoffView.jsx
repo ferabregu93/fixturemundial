@@ -169,7 +169,7 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
           initialDist = dist;
         } else {
           const delta = dist / initialDist;
-          setZoom(z => Math.min(1.2, Math.max(0.3, z * (1 + (delta - 1) * 0.05))));
+          setZoom(z => Math.min(1.2, Math.max(0.3, z + (delta - 1) * 0.01)));
         }
       }
     };

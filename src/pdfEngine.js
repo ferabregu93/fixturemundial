@@ -1,9 +1,6 @@
 import { jsPDF } from "jspdf";
 import { TEAMS } from "./data";
 
-// TODO: Reemplazar con el base64 real de la página 1 de tu PDF oficial
-const TEMPLATE_BASE64 = "data:image/jpeg;base64,..."; 
-
 const COORD_MAP = {
   "P73": { home: { x: 20, y: 45 }, away: { x: 80, y: 45 } },
   "P74": { home: { x: 20, y: 55 }, away: { x: 80, y: 55 } },
@@ -41,10 +38,6 @@ const COORD_MAP = {
 
 export async function generateOfficialPDF(bracket, userName, debugMode = false) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-  if (TEMPLATE_BASE64.length > 100) {
-    doc.addImage(TEMPLATE_BASE64, "JPEG", 0, 0, 210, 297);
-  }
 
   doc.setFontSize(9);
   

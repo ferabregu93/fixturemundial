@@ -52,17 +52,30 @@ function resolveR32Teams(allTables, bestThirds) {
     f[g] = tbl[0]?.pj > 0 ? tbl[0].id : null; 
     s[g] = tbl[1]?.pj > 0 ? tbl[1].id : null; 
   });
-  const t = bestThirds.map(x => (x.pj > 0 ? x.id : null));
+  
+  // Lógica mejorada para asignar terceros evitando enfrentamientos del mismo grupo (Bug 1)
+  const getThird = (avoidGrp, index) => {
+    const available = bestThirds.filter(t => t.pj > 0);
+    if (available.length === 0) return null;
+    
+    // Intentar tomar el asignado por índice, si es del mismo grupo, buscar el siguiente disponible
+    let selected = available[index % available.length];
+    if (selected && selected.grp === avoidGrp) {
+      selected = available[(index + 1) % available.length];
+    }
+    return selected?.id || null;
+  };
+
   const sl = id => id || "---";
   return {
-    P73: { home: sl(s["A"]), away: sl(s["B"]) },  P74: { home: sl(f["E"]), away: sl(t[0]) },
+    P73: { home: sl(s["A"]), away: sl(s["B"]) },  P74: { home: sl(f["E"]), away: sl(getThird("E", 0)) },
     P75: { home: sl(f["F"]), away: sl(s["C"]) },  P76: { home: sl(f["C"]), away: sl(s["F"]) },
-    P77: { home: sl(f["I"]), away: sl(t[1]) },    P78: { home: sl(s["E"]), away: sl(s["I"]) },
-    P79: { home: sl(f["A"]), away: sl(t[2]) },    P80: { home: sl(f["L"]), away: sl(t[3]) },
-    P81: { home: sl(f["D"]), away: sl(t[4]) },    P82: { home: sl(f["G"]), away: sl(t[5]) },
+    P77: { home: sl(f["I"]), away: sl(getThird("I", 1)) },    P78: { home: sl(s["E"]), away: sl(s["I"]) },
+    P79: { home: sl(f["A"]), away: sl(getThird("A", 2)) },    P80: { home: sl(f["L"]), away: sl(getThird("L", 3)) },
+    P81: { home: sl(f["D"]), away: sl(getThird("D", 4)) },    P82: { home: sl(f["G"]), away: sl(getThird("G", 5)) },
     P83: { home: sl(s["K"]), away: sl(s["L"]) },  P84: { home: sl(f["H"]), away: sl(s["J"]) },
-    P85: { home: sl(f["B"]), away: sl(t[6]) },    P86: { home: sl(f["J"]), away: sl(s["H"]) },
-    P87: { home: sl(f["K"]), away: sl(t[7]) },    P88: { home: sl(s["D"]), away: sl(s["G"]) },
+    P85: { home: sl(f["B"]), away: sl(getThird("B", 6)) },    P86: { home: sl(f["J"]), away: sl(s["H"]) },
+    P87: { home: sl(f["K"]), away: sl(getThird("K", 7)) },    P88: { home: sl(s["D"]), away: sl(s["G"]) },
   };
 }
 
@@ -158,8 +171,9 @@ export default function App() {
     showToast("📸 Generando reporte de predicción...");
 
     // Carga dinámica de html2canvas
-    if (!window.html2canvas) {
+    if (!window.html2canvas && !document.getElementById('script-html2canvas')) {
       const script = document.createElement("script");
+      script.id = 'script-html2canvas';
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
       await new Promise(r => { script.onload = r; document.head.appendChild(script); });
     }
@@ -284,16 +298,17 @@ export default function App() {
 
     // Determinar Ronda Alcanzada (Pesos para ordenamiento)
     const setR = (tid, val, name) => { 
-      if (tid && tid !== "---" && stats[tid] && stats[tid].round < val) { 
+      if (tid && tid !== "---" && tid !== "TBD" && stats[tid] && stats[tid].round < val) { 
         stats[tid].round = val; 
         stats[tid].roundName = name; 
       } 
     };
     
-    bracket.r32.forEach(m => { setR(m.home, 2, "16vos"); setR(m.away, 2, "16vos"); });
-    bracket.qf.forEach(m => { setR(m.home, 3, "Octavos"); setR(m.away, 3, "Octavos"); });
-    bracket.sf4.forEach(m => { setR(m.home, 4, "Cuartos"); setR(m.away, 4, "Cuartos"); });
-    bracket.sf2.forEach(m => { setR(m.home, 5, "Semis"); setR(m.away, 5, "Semis"); });
+    // Solo asignar ronda si el equipo es válido
+    bracket.r32.forEach(m => { if(m.home !== "---") setR(m.home, 2, "16vos"); if(m.away !== "---") setR(m.away, 2, "16vos"); });
+    bracket.qf.forEach(m => { if(m.home !== "---") setR(m.home, 3, "Octavos"); if(m.away !== "---") setR(m.away, 3, "Octavos"); });
+    bracket.sf4.forEach(m => { if(m.home !== "---") setR(m.home, 4, "Cuartos"); if(m.away !== "---") setR(m.away, 4, "Cuartos"); });
+    bracket.sf2.forEach(m => { if(m.home !== "---") setR(m.home, 5, "Semis"); if(m.away !== "---") setR(m.away, 5, "Semis"); });
     
     const fMatch = bracket.final;
     const tMatch = bracket.thirdMatch;
@@ -364,8 +379,9 @@ export default function App() {
     if (!winner && !isNaN(h) && !isNaN(a)) { if (h > a) winner = modal.home; else if (a > h) winner = modal.away; }
 
     // Disparar animación de confeti si se define el ganador de la gran final (P104)
-    if (modal.id === "P104" && winner) {
+    if (modal.id === "P104" && winner && !window.confetti && !document.getElementById('script-confetti')) {
       const script = document.createElement("script");
+      script.id = 'script-confetti';
       script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js";
       script.onload = () => {
         window.confetti({
@@ -497,6 +513,7 @@ export default function App() {
       {/* PANEL DE EXPORTACIÓN */}
       <div className="export-panel">
         <h3 className="text-gold" style={{ marginBottom: "16px" }}>Exportación PDF Oficial</h3>
+        <h3 className="text-gold" style={{ marginBottom: "16px" }}>Compartir Predicción</h3>
         <input type="text" placeholder="Tu Nombre / Entidad" value={userName} onChange={e => setUserName(e.target.value)} 
                style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text)", border: "1px solid var(--border)", marginBottom: "16px" }} />
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
