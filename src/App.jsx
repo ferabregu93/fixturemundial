@@ -48,8 +48,11 @@ function calcGroupTable(grpId, matches) {
 
 function resolveR32Teams(allTables, bestThirds) {
   const f = {}, s = {};
-  Object.entries(allTables).forEach(([g, tbl]) => { f[g] = tbl[0]?.id; s[g] = tbl[1]?.id; });
-  const t = bestThirds.map(x => x.id);
+  Object.entries(allTables).forEach(([g, tbl]) => { 
+    f[g] = tbl[0]?.pj > 0 ? tbl[0].id : null; 
+    s[g] = tbl[1]?.pj > 0 ? tbl[1].id : null; 
+  });
+  const t = bestThirds.map(x => (x.pj > 0 ? x.id : null));
   const sl = id => id || "---";
   return {
     P73: { home: sl(s["A"]), away: sl(s["B"]) },  P74: { home: sl(f["E"]), away: sl(t[0]) },
@@ -167,7 +170,7 @@ export default function App() {
       
       const canvas = await window.html2canvas(reportEl, {
         backgroundColor: theme === "dark" ? "#0A0A0F" : "#F4F6F8",
-        scale: 2, // Alta resolución para WhatsApp
+        scale: 3, // Ultra resolución para combatir la compresión de WhatsApp
         useCORS: true,
         logging: false,
         onclone: (clonedDoc) => {
@@ -215,12 +218,12 @@ export default function App() {
       });
   }, [allTables]);
 
-  const bestThirds = allThirds.slice(0, 8);
+  const bestThirds = useMemo(() => allThirds.slice(0, 8), [allThirds]);
   const r32Teams = useMemo(() => resolveR32Teams(allTables, bestThirds), [allTables, bestThirds]);
 
   const winOf = useCallback((id, home, away) => {
     const s = scores[id] || {};
-    if (s.winner) return s.winner;
+    if (s.winner && s.winner !== "---") return s.winner;
     const h = parseInt(s.gh), a = parseInt(s.ga);
     if (!isNaN(h) && !isNaN(a) && h !== a) return h > a ? home : away;
     return null;
@@ -603,25 +606,107 @@ export default function App() {
           </div>
         </div>
         
-        {/* Estadísticas Globales del Reporte */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "25px", marginBottom: "40px" }}>
-          <div style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border)", textAlign: "center" }}>
-            <div style={{ color: "var(--muted)", fontSize: "12px", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Partidos Jugados</div>
-            <div style={{ color: "var(--text)", fontSize: "32px", fontWeight: "900", fontFamily: "Barlow Condensed" }}>{playedMatches} / 104</div>
-          </div>
-          <div style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "20px", border: "1px solid var(--gold)", textAlign: "center", boxShadow: "0 0 20px rgba(212,160,23,0.1)" }}>
-            <div style={{ color: "var(--gold)", fontSize: "12px", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Goles Totales</div>
-            <div style={{ color: "var(--gold)", fontSize: "40px", fontWeight: "900", fontFamily: "Barlow Condensed" }}>{totalGoals}</div>
-          </div>
-          <div style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border)", textAlign: "center" }}>
-            <div style={{ color: "var(--muted)", fontSize: "12px", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Máximo Goleador</div>
-            <div style={{ color: "var(--text)", fontSize: "28px", fontWeight: "900", fontFamily: "Barlow Condensed" }}>
-              {topScoringTeam.id ? `${TEAMS[topScoringTeam.id]?.flag} ${topScoringTeam.id}` : "---"}
-              <span style={{ fontSize: "14px", color: "var(--gold)", marginLeft: "8px" }}>({topScoringTeam.gf} GF)</span>
-            </div>
+        {/* SECCIÓN PREMIUM: CAMPEÓN Y ESTADÍSTICAS */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: "25px", marginBottom: "50px" }}>
+           <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "24px", border: "3px solid var(--gold)", boxShadow: "0 15px 40px rgba(212,160,23,0.2)", display: "flex", alignItems: "center", gap: "25px" }}>
+              <div style={{ fontSize: "70px" }}>🏆</div>
+              <div>
+                <div style={{ color: "var(--gold)", fontSize: "14px", fontWeight: "900", letterSpacing: "3px", textTransform: "uppercase" }}>Campeón del Mundo</div>
+                <div style={{ fontSize: "42px", fontWeight: "900", color: "var(--text)", fontFamily: "Barlow Condensed" }}>
+                  {bracket.champion ? `${TEAMS[bracket.champion]?.flag} ${TEAMS[bracket.champion]?.name.toUpperCase()}` : "POR DEFINIR"}
+                </div>
+                <div style={{ color: "var(--gold)", fontSize: "16px", fontWeight: "700" }}>
+                  {bracket.thirdPlace ? `🥉 3er Puesto: ${TEAMS[bracket.thirdPlace]?.name}` : ""}
+                </div>
+              </div>
+           </div>
+           <div style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "24px", border: "1px solid var(--border)", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+             <div style={{ color: "var(--muted)", fontSize: "12px", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Goles Totales</div>
+             <div style={{ color: "var(--gold)", fontSize: "52px", fontWeight: "900", fontFamily: "Barlow Condensed" }}>{totalGoals}</div>
+           </div>
+           <div style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "24px", border: "1px solid var(--border)", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+             <div style={{ color: "var(--muted)", fontSize: "12px", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "5px" }}>Máxima Ofensiva</div>
+             <div style={{ color: "var(--text)", fontSize: "24px", fontWeight: "900", fontFamily: "Barlow Condensed" }}>
+               {topScoringTeam.id ? `${TEAMS[topScoringTeam.id]?.flag} ${TEAMS[topScoringTeam.id]?.name}` : "---"}
+             </div>
+             <div style={{ fontSize: "14px", color: "var(--gold)", fontWeight: "bold" }}>({topScoringTeam.gf} GF)</div>
+           </div>
+        </div>
+
+        {/* Ranking General en Reporte (Movido Arriba) */}
+        <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "20px", border: "1px solid var(--gold)", marginBottom: "50px" }}>
+           <div style={{ color: "var(--gold)", fontWeight: "900", marginBottom: "25px", fontSize: "28px", textAlign: "center", textTransform: "uppercase", fontFamily: "Barlow Condensed", letterSpacing: "3px" }}>Tabla General del Torneo</div>
+           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "30px" }}>
+             {[0, 1, 2].map(colIdx => (
+               <div key={colIdx}>
+                 <div style={{ display: "grid", gridTemplateColumns: "35px 1fr 65px 35px", fontSize: "10px", color: "var(--muted)", fontWeight: "bold", paddingBottom: "8px", borderBottom: "1px solid var(--border)", marginBottom: "8px" }}>
+                   <span>POS</span>
+                   <span>SELECCIÓN</span>
+                   <span>RONDA</span>
+                   <span style={{ textAlign: "center" }}>PTS</span>
+                 </div>
+                 {fullRanking.slice(colIdx * 16, (colIdx + 1) * 16).map((team, i) => {
+                    const pos = colIdx * 16 + i + 1;
+                    const isTop4 = pos <= 4;
+                    return (
+                      <div key={team.id} style={{ display: "grid", gridTemplateColumns: "35px 1fr 65px 35px", alignItems: "center", fontSize: "13px", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: team.round > 1 ? 1 : 0.45 }}>
+                        <span style={{ fontWeight: "900", color: isTop4 ? "var(--gold)" : "inherit" }}>{pos}</span>
+                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: team.round > 1 ? "bold" : "normal" }}>{TEAMS[team.id]?.flag} {TEAMS[team.id]?.name || team.id}</span>
+                        <span style={{ fontSize: "9px", textTransform: "uppercase", color: isTop4 ? "var(--gold)" : "var(--muted)", fontWeight: "bold" }}>{team.roundName}</span>
+                        <span style={{ textAlign: "center", fontWeight: "900", color: team.round > 1 ? "var(--gold)" : "inherit" }}>{team.pts}</span>
+                      </div>
+                    );
+                 })}
+               </div>
+             ))}
+           </div>
+        </div>
+
+        {/* RESULTADOS DE PLAYOFFS COMPACTOS (Después del Ranking) */}
+        <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "20px", border: "1px solid var(--border)", marginBottom: "50px" }}>
+          <div style={{ color: "var(--gold)", fontWeight: "900", marginBottom: "25px", fontSize: "28px", textAlign: "center", textTransform: "uppercase", fontFamily: "Barlow Condensed", letterSpacing: "3px" }}>Fase de Eliminación Directa</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+            {[
+              { title: "Finales", matches: [bracket.final, bracket.thirdMatch] },
+              { title: "Semifinales", matches: bracket.sf2 },
+              { title: "Cuartos", matches: bracket.sf4 },
+              { title: "Octavos", matches: bracket.qf },
+              { title: "16vos (Lado A)", matches: bracket.r32.slice(0, 8) },
+              { title: "16vos (Lado B)", matches: bracket.r32.slice(8, 16) }
+            ].map(round => (
+              <div key={round.title} style={{ background: "rgba(0,0,0,0.2)", padding: "15px", borderRadius: "15px", border: "1px solid var(--border)" }}>
+                 <div style={{ color: "var(--gold)", fontWeight: "900", marginBottom: "12px", fontSize: "13px", textAlign: "center", borderBottom: "1px solid rgba(212,160,23,0.1)", paddingBottom: "5px" }}>{round.title.toUpperCase()}</div>
+                 {round.matches.map(m => {
+                   const s = scores[m.id] || {};
+                   const homeT = TEAMS[m.home];
+                   const awayT = TEAMS[m.away];
+                   const gh = parseInt(s.gh);
+                   const ga = parseInt(s.ga);
+                   const derivedWinner = s.winner || (!isNaN(gh) && !isNaN(ga) && gh !== ga ? (gh > ga ? m.home : m.away) : null);
+                   const isPenalty = derivedWinner && !isNaN(gh) && !isNaN(ga) && gh === ga;
+                   const isHW = derivedWinner === m.home;
+                   const isAW = derivedWinner === m.away;
+
+                   return (
+                     <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", marginBottom: "6px", opacity: m.home === "---" ? 0.4 : 1 }}>
+                       <span style={{ flex: 1, textAlign: "right", fontWeight: "800", color: isHW ? "var(--gold)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden" }}>
+                         {homeT?.flag || "🏳️"} {m.home}{isPenalty && isHW ? " (pen.)" : ""}
+                       </span>
+                       <span style={{ margin: "0 8px", background: "#FFFFFF", padding: "1px 5px", borderRadius: "4px", color: "#000000", fontWeight: "900", minWidth: "40px", textAlign: "center", border: "1px solid var(--gold)", fontSize: "11px" }}>
+                         {s.gh !== "" && s.gh !== undefined ? s.gh : "-"} : {s.ga !== "" && s.ga !== undefined ? s.ga : "-"}
+                       </span>
+                       <span style={{ flex: 1, textAlign: "left", fontWeight: "800", color: isAW ? "var(--gold)" : "var(--text)", whiteSpace: "nowrap", overflow: "hidden" }}>
+                         {isPenalty && isAW ? "(pen.) " : ""}{m.away} {awayT?.flag || "🏳️"}
+                       </span>
+                     </div>
+                   );
+                 })}
+              </div>
+            ))}
           </div>
         </div>
 
+        {/* FASE DE GRUPOS (Al final) */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px", marginBottom: "50px" }}>
            {Object.keys(GROUPS).map(g => (
              <div key={g} style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border)" }}>
@@ -639,8 +724,8 @@ export default function App() {
                     <span style={{ textAlign: "center" }}>PTS</span>
                   </div>
                   {allTables[g].map((t, idx) => (
-                    <div key={t.id} style={{ display: "grid", gridTemplateColumns: "1fr 20px 20px 20px 20px 30px", alignItems: "center", fontSize: "11px", padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: idx < 2 ? 1 : 0.35 }}>
-                      <span style={{ fontWeight: idx < 2 ? "bold" : "normal", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{idx+1}. {TEAMS[t.id]?.flag} {t.id}</span>
+                   <div key={t.id} style={{ display: "grid", gridTemplateColumns: "1fr 18px 18px 18px 18px 25px", alignItems: "center", fontSize: "10px", padding: "4px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: idx < 2 ? 1 : 0.35 }}>
+                     <span style={{ fontWeight: idx < 2 ? "900" : "normal", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{idx+1}. {TEAMS[t.id]?.flag} {t.id}</span>
                       <span style={{ textAlign: "center" }}>{t.pj}</span>
                       <span style={{ textAlign: "center" }}>{t.gf}</span>
                       <span style={{ textAlign: "center" }}>{t.gc}</span>
@@ -658,14 +743,14 @@ export default function App() {
                     const isHW = !isNaN(gh) && !isNaN(ga) && gh > ga;
                     const isAW = !isNaN(gh) && !isNaN(ga) && ga > gh;
                     return (
-                      <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px", marginBottom: "8px", color: "var(--muted)" }}>
-                        <span style={{ flex: 1, textAlign: "right", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", color: isHW ? "var(--gold)" : "inherit" }}>
+                      <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", marginBottom: "8px", color: "var(--text)" }}>
+                        <span style={{ flex: 1, textAlign: "right", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", color: isHW ? "var(--gold)" : "inherit" }}>
                           {TEAMS[m.home]?.flag} {TEAMS[m.home]?.name || m.home}
                         </span>
-                        <span style={{ margin: "0 10px", background: "rgba(0,0,0,0.3)", padding: "3px 8px", borderRadius: "6px", color: "var(--text)", fontWeight: "900", minWidth: "45px", textAlign: "center", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <span style={{ margin: "0 10px", background: "#FFFFFF", padding: "4px 10px", borderRadius: "6px", color: "#000000", fontWeight: "900", minWidth: "55px", textAlign: "center", border: "1px solid var(--gold)", fontSize: "14px" }}>
                           {m.gh !== "" ? m.gh : "0"} - {m.ga !== "" ? m.ga : "0"}
                         </span>
-                        <span style={{ flex: 1, textAlign: "left", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", color: isAW ? "var(--gold)" : "inherit" }}>
+                        <span style={{ flex: 1, textAlign: "left", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", color: isAW ? "var(--gold)" : "inherit" }}>
                            {TEAMS[m.away]?.name || m.away} {TEAMS[m.away]?.flag}
                         </span>
                       </div>
@@ -685,11 +770,11 @@ export default function App() {
            </div>
            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "15px" }}>
              {allThirds.map((t, i) => (
-               <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px", padding: "8px 15px", background: i < 8 ? "var(--win-bg)" : "rgba(0,0,0,0.1)", borderRadius: "10px", border: i < 8 ? "1px solid var(--gold)" : "1px solid var(--border)", opacity: i < 8 ? 1 : 0.35 }}>
-                 <span style={{ fontWeight: i < 8 ? "bold" : "normal" }}>
+               <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px", padding: "10px 15px", background: i < 8 ? "var(--win-bg)" : "rgba(0,0,0,0.1)", borderRadius: "10px", border: i < 8 ? "1px solid var(--gold)" : "1px solid var(--border)", opacity: i < 8 ? 1 : 0.35 }}>
+                 <span style={{ fontWeight: i < 8 ? "900" : "normal" }}>
                    {i + 1}. {TEAMS[t.id]?.flag} {t.id} <span style={{ fontSize: "10px", color: "var(--muted)" }}>(G{t.grp})</span>
                  </span>
-                 <span style={{ fontWeight: "900", color: i < 8 ? "var(--gold)" : "inherit" }}>{t.pts} pts (DG {t.dg >= 0 ? `+${t.dg}` : t.dg})</span>
+                 <span style={{ fontWeight: "900", color: i < 8 ? "var(--gold)" : "inherit" }}>{t.pts} PTS</span>
                </div>
              ))}
            </div>
@@ -721,14 +806,14 @@ export default function App() {
                    const isAW = derivedWinner === m.away;
 
                    return (
-                     <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px", marginBottom: "10px", color: "var(--muted)" }}>
-                       <span style={{ flex: 1, textAlign: "right", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", color: isHW ? "var(--gold)" : "inherit" }}>
+                     <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px", marginBottom: "12px", color: "var(--text)" }}>
+                       <span style={{ flex: 1, textAlign: "right", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", color: isHW ? "var(--gold)" : "inherit" }}>
                          {homeT?.flag} {homeT?.name || m.home}{isPenalty && isHW ? " (pen.)" : ""}
                        </span>
-                       <span style={{ margin: "0 10px", background: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "4px", color: "var(--text)", fontWeight: "900", minWidth: "50px", textAlign: "center", position: "relative" }}>
+                       <span style={{ margin: "0 12px", background: "#FFFFFF", padding: "5px 10px", borderRadius: "6px", color: "#000000", fontWeight: "900", minWidth: "60px", textAlign: "center", position: "relative", border: "1px solid var(--gold)" }}>
                          {s.gh !== "" && s.gh !== undefined ? s.gh : "0"} - {s.ga !== "" && s.ga !== undefined ? s.ga : "0"}
                        </span>
-                       <span style={{ flex: 1, textAlign: "left", fontWeight: "bold", whiteSpace: "nowrap", overflow: "hidden", color: isAW ? "var(--gold)" : "inherit" }}>
+                       <span style={{ flex: 1, textAlign: "left", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", color: isAW ? "var(--gold)" : "inherit" }}>
                          {isPenalty && isAW ? "(pen.) " : ""}{awayT?.name || m.away} {awayT?.flag}
                        </span>
                      </div>
@@ -737,53 +822,6 @@ export default function App() {
                </div>
             </div>
           ))}
-        </div>
-
-        {/* Ranking General en Reporte (3 columnas para 48 equipos) */}
-        <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "20px", border: "1px solid var(--gold)", marginBottom: "50px" }}>
-           <div style={{ color: "var(--gold)", fontWeight: "900", marginBottom: "25px", fontSize: "28px", textAlign: "center", textTransform: "uppercase", fontFamily: "Barlow Condensed", letterSpacing: "3px" }}>Tabla General del Torneo</div>
-           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "30px" }}>
-             {[0, 1, 2].map(colIdx => (
-               <div key={colIdx}>
-                 <div style={{ display: "grid", gridTemplateColumns: "35px 1fr 65px 35px", fontSize: "10px", color: "var(--muted)", fontWeight: "bold", paddingBottom: "8px", borderBottom: "1px solid var(--border)", marginBottom: "8px" }}>
-                   <span>POS</span>
-                   <span>SELECCIÓN</span>
-                   <span>RONDA</span>
-                   <span style={{ textAlign: "center" }}>PTS</span>
-                 </div>
-                 {fullRanking.slice(colIdx * 16, (colIdx + 1) * 16).map((team, i) => {
-                    const pos = colIdx * 16 + i + 1;
-                    const isTop4 = pos <= 4;
-                    return (
-                      <div key={team.id} style={{ display: "grid", gridTemplateColumns: "35px 1fr 65px 35px", alignItems: "center", fontSize: "11px", padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: team.round > 1 ? 1 : 0.45 }}>
-                        <span style={{ fontWeight: "900", color: isTop4 ? "var(--gold)" : "inherit" }}>{pos}</span>
-                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: team.round > 1 ? "bold" : "normal" }}>{TEAMS[team.id]?.flag} {team.id}</span>
-                        <span style={{ fontSize: "9px", textTransform: "uppercase", color: isTop4 ? "var(--gold)" : "var(--muted)", fontWeight: "bold" }}>{team.roundName}</span>
-                        <span style={{ textAlign: "center", fontWeight: "900", color: team.round > 1 ? "var(--gold)" : "inherit" }}>{team.pts}</span>
-                      </div>
-                    );
-                 })}
-               </div>
-             ))}
-           </div>
-        </div>
-
-        <div style={{ background: "var(--bg-card)", padding: "30px", borderRadius: "20px", border: "2px solid var(--gold)" }}>
-          <div style={{ textAlign: "center", color: "var(--gold)", fontWeight: "bold", marginBottom: "20px" }}>CAMINO A LA GLORIA</div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-             <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: "14px", color: "var(--muted)" }}>CAMPEÓN</div>
-                <div style={{ fontSize: "32px", fontWeight: "900", color: "var(--gold)" }}>
-                  {bracket.champion ? `${TEAMS[bracket.champion]?.flag} ${TEAMS[bracket.champion]?.name}` : "---"}
-                </div>
-             </div>
-             <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "14px", color: "var(--muted)" }}>TERCER PUESTO</div>
-                <div style={{ fontSize: "20px", fontWeight: "700" }}>
-                  {bracket.thirdPlace ? `${TEAMS[bracket.thirdPlace]?.flag} ${TEAMS[bracket.thirdPlace]?.name}` : "---"}
-                </div>
-             </div>
-          </div>
         </div>
       </div>
       </div>
