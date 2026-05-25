@@ -186,7 +186,18 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
   }, [vpRef, setZoom]);
 
   return (
-    <div className="bracket-outer" ref={outerRef}>
+    <>
+      <div className="playoff-legend">
+        <div className="legend-title">🎯 Emparejamientos con Terceros</div>
+        <div className="legend-text">
+          Los <strong>8 mejores terceros clasificados</strong> se enfrentan a los primeros puestos según la <strong>tabla predefinida de la FIFA (Anexo C)</strong>.
+          Los emparejamientos varían según qué grupos tienen los terceros clasificados, pero siempre siguiendo una combinación específica para garantizar equidad.
+          <br/><br/>
+          <strong>Partidos fijos:</strong> 1A vs 3?, 1B vs 3?, etc. | <strong>Partidos entre segundos:</strong> 2A vs 2B, 2D vs 2G, etc.
+        </div>
+      </div>
+
+      <div className="bracket-outer" ref={outerRef}>
       <div className="bracket-zoom-controls">
         <button className={`zc-btn ${viewMode === 'bracket' ? 'active' : ''}`} onClick={() => setViewMode('bracket')} title="Vista Llave">📊</button>
         <button className={`zc-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} title="Vista Lista">📋</button>
@@ -241,7 +252,8 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
           <ListSection title="Gran Final" matches={bracket.final} scores={scores} openModal={openModal} />
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

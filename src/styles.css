@@ -216,6 +216,72 @@ body {
 .ssep { font-weight: 900; color: var(--muted); }
 
 /* Best Thirds Grid */
+.thirds-container { display: flex; flex-direction: column; gap: 24px; }
+
+.thirds-legend {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 100%;
+}
+
+.legend-title {
+  font-weight: 900;
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legend-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.legend-text p { margin-bottom: 8px; }
+
+.legend-text ol {
+  margin-left: 20px;
+  margin-bottom: 8px;
+}
+
+.legend-text li {
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+.legend-text strong {
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.playoff-legend {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  max-width: 100%;
+}
+
+.playoff-legend .legend-title {
+  font-weight: 900;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.playoff-legend .legend-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
 .thirds-grid { 
   display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
   gap: 16px; 
