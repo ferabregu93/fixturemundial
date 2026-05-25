@@ -52,30 +52,17 @@ function resolveR32Teams(allTables, bestThirds) {
     f[g] = tbl[0]?.pj > 0 ? tbl[0].id : null; 
     s[g] = tbl[1]?.pj > 0 ? tbl[1].id : null; 
   });
-  
-  // Lógica mejorada para asignar terceros evitando enfrentamientos del mismo grupo (Bug 1)
-  const getThird = (avoidGrp, index) => {
-    const available = bestThirds.filter(t => t.pj > 0);
-    if (available.length === 0) return null;
-    
-    // Intentar tomar el asignado por índice, si es del mismo grupo, buscar el siguiente disponible
-    let selected = available[index % available.length];
-    if (selected && selected.grp === avoidGrp) {
-      selected = available[(index + 1) % available.length];
-    }
-    return selected?.id || null;
-  };
-
+  const t = bestThirds.map(x => (x.pj > 0 ? x.id : null));
   const sl = id => id || "---";
   return {
-    P73: { home: sl(s["A"]), away: sl(s["B"]) },  P74: { home: sl(f["E"]), away: sl(getThird("E", 0)) },
+    P73: { home: sl(s["A"]), away: sl(s["B"]) },  P74: { home: sl(f["E"]), away: sl(t[0]) },
     P75: { home: sl(f["F"]), away: sl(s["C"]) },  P76: { home: sl(f["C"]), away: sl(s["F"]) },
-    P77: { home: sl(f["I"]), away: sl(getThird("I", 1)) },    P78: { home: sl(s["E"]), away: sl(s["I"]) },
-    P79: { home: sl(f["A"]), away: sl(getThird("A", 2)) },    P80: { home: sl(f["L"]), away: sl(getThird("L", 3)) },
-    P81: { home: sl(f["D"]), away: sl(getThird("D", 4)) },    P82: { home: sl(f["G"]), away: sl(getThird("G", 5)) },
+    P77: { home: sl(f["I"]), away: sl(t[1]) },    P78: { home: sl(s["E"]), away: sl(s["I"]) },
+    P79: { home: sl(f["A"]), away: sl(t[2]) },    P80: { home: sl(f["L"]), away: sl(t[3]) },
+    P81: { home: sl(f["D"]), away: sl(t[4]) },    P82: { home: sl(f["G"]), away: sl(t[5]) },
     P83: { home: sl(s["K"]), away: sl(s["L"]) },  P84: { home: sl(f["H"]), away: sl(s["J"]) },
-    P85: { home: sl(f["B"]), away: sl(getThird("B", 6)) },    P86: { home: sl(f["J"]), away: sl(s["H"]) },
-    P87: { home: sl(f["K"]), away: sl(getThird("K", 7)) },    P88: { home: sl(s["D"]), away: sl(s["G"]) },
+    P85: { home: sl(f["B"]), away: sl(t[6]) },    P86: { home: sl(f["J"]), away: sl(s["H"]) },
+    P87: { home: sl(f["K"]), away: sl(t[7]) },    P88: { home: sl(s["D"]), away: sl(s["G"]) },
   };
 }
 
@@ -304,7 +291,6 @@ export default function App() {
       } 
     };
     
-    // Solo asignar ronda si el equipo es válido
     bracket.r32.forEach(m => { if(m.home !== "---") setR(m.home, 2, "16vos"); if(m.away !== "---") setR(m.away, 2, "16vos"); });
     bracket.qf.forEach(m => { if(m.home !== "---") setR(m.home, 3, "Octavos"); if(m.away !== "---") setR(m.away, 3, "Octavos"); });
     bracket.sf4.forEach(m => { if(m.home !== "---") setR(m.home, 4, "Cuartos"); if(m.away !== "---") setR(m.away, 4, "Cuartos"); });
@@ -379,9 +365,8 @@ export default function App() {
     if (!winner && !isNaN(h) && !isNaN(a)) { if (h > a) winner = modal.home; else if (a > h) winner = modal.away; }
 
     // Disparar animación de confeti si se define el ganador de la gran final (P104)
-    if (modal.id === "P104" && winner && !window.confetti && !document.getElementById('script-confetti')) {
+    if (modal.id === "P104" && winner) {
       const script = document.createElement("script");
-      script.id = 'script-confetti';
       script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js";
       script.onload = () => {
         window.confetti({
@@ -397,26 +382,6 @@ export default function App() {
     setScores(prev => ({ ...prev, [modal.id]: { gh: finalH, ga: finalA, winner } }));
     setModal(null);
     showToast("✓ Resultado guardado");
-  };
-
-  const handleExport = async (debug = false) => {
-    setExporting(true);
-    await generateOfficialPDF(bracket, userName, debug);
-    setExporting(false);
-  };
-
-  const exportCSV = () => {
-    let csv = "ID,Ronda,Local,Goles Local,Goles Visitante,Visitante,Ganador\n";
-    allBracketMatches.forEach(m => {
-      const s = scores[m.id] || {};
-      csv += `${m.id},"${m.label}",${m.home},${s.gh || 0},${s.ga || 0},${m.away},${s.winner || ""}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `datos_mundial_${userName || '2026'}.csv`;
-    a.click();
-    showToast("📊 Datos exportados en CSV");
   };
 
   // Soporte Touch para el viewport de la llave
@@ -512,15 +477,11 @@ export default function App() {
 
       {/* PANEL DE EXPORTACIÓN */}
       <div className="export-panel">
-        <h3 className="text-gold" style={{ marginBottom: "16px" }}>Exportación PDF Oficial</h3>
         <h3 className="text-gold" style={{ marginBottom: "16px" }}>Compartir Predicción</h3>
         <input type="text" placeholder="Tu Nombre / Entidad" value={userName} onChange={e => setUserName(e.target.value)} 
                style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "var(--bg-main)", color: "var(--text)", border: "1px solid var(--border)", marginBottom: "16px" }} />
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <button className="ebtn" style={{ background: "var(--gold)", color: "#000", border: "none" }} onClick={downloadPredictionImage} disabled={exporting}>📸 Descargar Imagen de Predicción</button>
-          <button className="ebtn" onClick={() => handleExport(false)} disabled={exporting}>📄 Inyectar PDF Oficial</button>
-          <button className="ebtn" onClick={() => handleExport(true)} disabled={exporting} style={{ borderColor: "#E53935", color: "#E53935" }}>🛠 Modo Calibración</button>
-          <button className="ebtn" onClick={exportCSV} style={{ borderColor: "var(--accent-blue)", color: "var(--accent-blue)" }}>📊 Exportar Datos (CSV)</button>
         </div>
       </div>
 
@@ -797,49 +758,6 @@ export default function App() {
            </div>
         </div>
 
-        {/* Resultados de Playoffs en Reporte */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px", marginBottom: "50px" }}>
-          {[
-            { title: "Dieciseisavos", matches: bracket.r32 },
-            { title: "Octavos", matches: bracket.qf },
-            { title: "Cuartos", matches: bracket.sf4 },
-            { title: "Semifinales", matches: bracket.sf2 },
-            { title: "Tercer Puesto", matches: [bracket.thirdMatch] },
-            { title: "Gran Final", matches: [bracket.final] }
-          ].map(round => (
-            <div key={round.title} style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "20px", border: "1px solid var(--border)" }}>
-               <div style={{ color: "var(--gold)", fontWeight: "900", marginBottom: "15px", fontSize: "16px", textAlign: "center", borderBottom: "1px solid var(--border)", paddingBottom: "10px" }}>{round.title.toUpperCase()}</div>
-               <div>
-                 {round.matches.map(m => {
-                   const s = scores[m.id] || {};
-                   const homeT = TEAMS[m.home];
-                   const awayT = TEAMS[m.away];
-                   const gh = parseInt(s.gh);
-                   const ga = parseInt(s.ga);
-                   // Lógica de ganador derivado para asegurar color correcto
-                   const derivedWinner = s.winner || (!isNaN(gh) && !isNaN(ga) && gh !== ga ? (gh > ga ? m.home : m.away) : null);
-                   const isPenalty = derivedWinner && !isNaN(gh) && !isNaN(ga) && gh === ga;
-                   const isHW = derivedWinner === m.home;
-                   const isAW = derivedWinner === m.away;
-
-                   return (
-                     <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px", marginBottom: "12px", color: "var(--text)" }}>
-                       <span style={{ flex: 1, textAlign: "right", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", color: isHW ? "var(--gold)" : "inherit" }}>
-                         {homeT?.flag} {homeT?.name || m.home}{isPenalty && isHW ? " (pen.)" : ""}
-                       </span>
-                       <span style={{ margin: "0 12px", background: "#FFFFFF", padding: "5px 10px", borderRadius: "6px", color: "#000000", fontWeight: "900", minWidth: "60px", textAlign: "center", position: "relative", border: "1px solid var(--gold)" }}>
-                         {s.gh !== "" && s.gh !== undefined ? s.gh : "0"} - {s.ga !== "" && s.ga !== undefined ? s.ga : "0"}
-                       </span>
-                       <span style={{ flex: 1, textAlign: "left", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", color: isAW ? "var(--gold)" : "inherit" }}>
-                         {isPenalty && isAW ? "(pen.) " : ""}{awayT?.name || m.away} {awayT?.flag}
-                       </span>
-                     </div>
-                   );
-                 })}
-               </div>
-            </div>
-          ))}
-        </div>
       </div>
       </div>
     </div>
