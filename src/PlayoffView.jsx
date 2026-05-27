@@ -42,10 +42,12 @@ BracketMatch.propTypes = {
   onOpen: PropTypes.func.isRequired
 };
 
-const BCol = ({ ids, label, variant, side, mt, bfm, scores, openModal }) => (
-  <div className={`bcol ${side}`} style={{ paddingTop: mt || 0 }}>
+const BCol = ({ ids, label, variant, side, bfm, scores, openModal }) => (
+  <div className={`bcol ${side} round-${variant}`}>
     <div className={`rnd-hdr ${variant}`}>{label}</div>
-    {ids.map(id => <BracketMatch key={id} match={bfm(id)} scores={scores} onOpen={openModal} />)}
+    <div className="bm-list">
+      {ids.map(id => <BracketMatch key={id} match={bfm(id)} scores={scores} onOpen={openModal} />)}
+    </div>
   </div>
 );
 
@@ -54,7 +56,6 @@ BCol.propTypes = {
   label: PropTypes.string.isRequired,
   variant: PropTypes.string.isRequired,
   side: PropTypes.string.isRequired,
-  mt: PropTypes.number,
   bfm: PropTypes.func.isRequired,
   scores: PropTypes.object.isRequired,
   openModal: PropTypes.func.isRequired
@@ -85,7 +86,7 @@ ListSection.propTypes = {
 };
 
 export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom, vpRef, onMouseDown, allBracketMatches, showToast }) {
-  const [viewMode, setViewMode] = useState("bracket");
+  const [viewMode, setViewMode] = useState("list");
   const matchMap = useMemo(() => {
     const map = {};
     allBracketMatches.forEach(m => { if (m) map[m.id] = m; });
@@ -222,18 +223,18 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
             <div className="zc-divider" />
             <button className="zc-btn" onClick={() => setZoom(z => Math.min(1.2, z + 0.1))} title="Aumentar Zoom">＋</button>
             <button className="zc-btn" onClick={() => setZoom(z => Math.max(0.3, z - 0.1))} title="Reducir Zoom">－</button>
-            <button className="zc-btn" onClick={() => setZoom(0.55)} title="Restablecer" style={{ fontSize: '10px', fontWeight: '900' }}>FIT</button>
+            <button className="zc-btn" onClick={() => { setZoom(0.48); const vp = vpRef.current; if(vp) { vp.scrollLeft = (vp.scrollWidth - vp.clientWidth) / 2; vp.scrollTop = (vp.scrollHeight - vp.clientHeight) / 2; } }} title="Ver Todo" style={{ fontSize: '10px', fontWeight: '900' }}>FIT</button>
           </>
         )}
       </div>
 
       {viewMode === 'bracket' ? (
-        <div className="bracket-viewport" ref={vpRef} onMouseDown={onMouseDown} style={{ height: "65vh" }}>
+        <div className="bracket-viewport" ref={vpRef} onMouseDown={onMouseDown} style={{ height: "70vh" }}>
           <div className="bracket-canvas" style={{ transform: `scale(${zoom})` }}>
-            <BCol ids={["P73","P74","P75","P77","P76","P78","P79","P80"]} label="16vos" variant="dieciseis" side="left paired" bfm={bfm} scores={scores} openModal={openModal} />
-            <BCol ids={["P89","P90","P91","P92"]} label="Octavos" variant="octavos" side="left paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} />
-            <BCol ids={["P97","P98"]} label="Cuartos" variant="cuartos" side="left paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} />
-            <BCol ids={["P101"]} label="Semifinal" variant="semi" side="left solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} />
+            <BCol ids={["P74","P77","P73","P75","P76","P78","P79","P80"]} label="16vos" variant="dieciseis" side="left" bfm={bfm} scores={scores} openModal={openModal} />
+            <BCol ids={["P89","P90","P91","P92"]} label="Octavos" variant="octavos" side="left" bfm={bfm} scores={scores} openModal={openModal} />
+            <BCol ids={["P97","P99"]} label="Cuartos" variant="cuartos" side="left" bfm={bfm} scores={scores} openModal={openModal} />
+            <BCol ids={["P101"]} label="Semifinal" variant="semi" side="left" bfm={bfm} scores={scores} openModal={openModal} />
             <div className="bcol center-col">
               <div className="final-wrapper">
                 <div className="rnd-hdr final">🏆 Gran Final</div>
@@ -246,10 +247,10 @@ export default function PlayoffView({ bracket, scores, openModal, zoom, setZoom,
                 </div>
               </div>
             </div>
-            <BCol ids={["P102"]} label="Semifinal" variant="semi" side="right solo" mt={360} bfm={bfm} scores={scores} openModal={openModal} />
-            <BCol ids={["P99","P100"]} label="Cuartos" variant="cuartos" side="right paired" mt={155} bfm={bfm} scores={scores} openModal={openModal} />
-            <BCol ids={["P93","P94","P95","P96"]} label="Octavos" variant="octavos" side="right paired" mt={55} bfm={bfm} scores={scores} openModal={openModal} />
-            <BCol ids={["P81","P82","P83","P84","P85","P87","P86","P88"]} label="16vos" variant="dieciseis" side="right paired" bfm={bfm} scores={scores} openModal={openModal} />
+            <BCol ids={["P102"]} label="Semifinal" variant="semi" side="right" bfm={bfm} scores={scores} openModal={openModal} />
+            <BCol ids={["P98","P100"]} label="Cuartos" variant="cuartos" side="right" bfm={bfm} scores={scores} openModal={openModal} />
+            <BCol ids={["P93","P94","P95","P96"]} label="Octavos" variant="octavos" side="right" bfm={bfm} scores={scores} openModal={openModal} />
+            <BCol ids={["P83","P84","P81","P82","P86","P88","P85","P87"]} label="16vos" variant="dieciseis" side="right" bfm={bfm} scores={scores} openModal={openModal} />
           </div>
         </div>
       ) : (

@@ -377,32 +377,83 @@ body {
 }
 
 .bracket-viewport { 
-  overflow: auto; cursor: grab; padding: 0; scrollbar-width: none;
-  background-image: radial-gradient(var(--border) 1px, transparent 1px);
-  background-size: 30px 30px;
+  overflow: auto; cursor: grab; padding: 0; scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+  background: 
+    linear-gradient(0deg, rgba(212,160,23,0.02) 0%, rgba(212,160,23,0.01) 100%),
+    linear-gradient(90deg, rgba(212,160,23,0.01) 0%, rgba(212,160,23,0.02) 50%, rgba(212,160,23,0.01) 100%),
+    var(--bg-panel);
+  background-attachment: fixed, fixed, scroll;
 }
 .bracket-viewport:active { cursor: grabbing; }
+
 .bracket-canvas { 
-  display: flex; gap: 0; transform-origin: center center; transition: transform 0.1s ease-out;
+  display: flex; 
+  gap: 40px; /* Espacio entre columnas para las flechas */
+  transform-origin: center center; 
+  transition: transform 0.1s ease-out;
   width: max-content;
-  padding: 80px 40px;
+  padding: 40px 20px;
+  position: relative;
+  height: 1100px; /* Altura fija para que el cálculo de space-around sea perfecto */
+  align-items: stretch;
 }
 
-.bcol { display: flex; flex-direction: column; justify-content: center; gap: 12px; position: relative; padding: 0 30px; }
+.bcol { 
+  display: flex; 
+  flex-direction: column; 
+  width: 210px; 
+  position: relative; 
+}
+
+.bm-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around; /* Esto crea la magia de la alineación central */
+  flex-grow: 1;
+  padding: 20px 0;
+}
+
 .rnd-hdr { 
   text-align: center; font-family: 'Barlow Condensed'; font-weight: 800; 
   text-transform: uppercase; color: var(--muted); letter-spacing: 1.5px;
-  margin-bottom: 15px; font-size: 13px;
-  background: rgba(255,255,255,0.03);
-  padding: 8px 16px;
-  border-radius: 20px;
+  margin-bottom: 10px; font-size: 12px;
+  background: rgba(255,255,255,0.02);
+  padding: 6px 12px;
+  border-radius: 16px;
   border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Conectores Dinámicos */
+.bm { position: relative; }
+
+/* Línea que sale hacia la siguiente ronda (Lado Izquierdo) */
+.left .bm::after {
+  content: "";
+  position: absolute;
+  right: -42px;
+  top: 50%;
+  width: 42px;
+  border-bottom: 2px solid var(--border);
+  z-index: -1;
+}
+
+/* Línea que recibe de la ronda anterior (Lado Derecho) */
+.right .bm::before {
+  content: "";
+  position: absolute;
+  left: -42px;
+  top: 50%;
+  width: 42px;
+  border-bottom: 2px solid var(--border);
+  z-index: -1;
 }
 
 /* Bracket Match Card */
 .bm {
-  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-  width: 220px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+  width: 200px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative;
 }
 .bm:hover { border-color: var(--gold); transform: scale(1.05); z-index: 10; box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
 .bm.tbd { opacity: 0.5; cursor: default; }
@@ -413,25 +464,99 @@ body {
 
 .bt { 
   display: flex; justify-content: space-between; align-items: center; 
-  padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); 
+  padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); 
 }
 .bt:last-child { border-bottom: none; }
 .bti { display: flex; align-items: center; gap: 8px; overflow: hidden; }
-.btfl { font-size: 16px; }
+.btfl { font-size: 14px; }
 .btnm { 
-  font-size: 15px; font-weight: 700; white-space: nowrap; 
+  font-size: 13px; font-weight: 700; white-space: nowrap; 
   overflow: hidden; text-overflow: ellipsis; 
 }
-.btsc { font-family: 'Barlow Condensed'; font-weight: 900; font-size: 16px; color: var(--gold); }
+.btsc { font-family: 'Barlow Condensed'; font-weight: 900; font-size: 14px; color: var(--gold); }
 
 .bt.win { background: var(--win-bg); }
 .bt.win .btnm { color: var(--gold); }
 .bt.los { opacity: 0.5; }
 
 /* Final Center Column */
-.center-col .bm { 
-  width: 240px; border-width: 2px; border-color: var(--gold);
-  box-shadow: 0 0 30px rgba(212,160,23,0.2);
+.center-col { 
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 40px;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, rgba(212,160,23,0.08) 0%, rgba(212,160,23,0.02) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(212,160,23,0.3);
+}
+
+.final-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.final-wrapper .rnd-hdr {
+  background: linear-gradient(135deg, rgba(212,160,23,0.4) 0%, rgba(212,160,23,0.2) 100%);
+  border: 2px solid var(--gold);
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--gold);
+}
+
+.final-wrapper .bm { 
+  width: 260px !important; 
+  border-width: 3px; 
+  border-color: var(--gold);
+  box-shadow: 0 0 50px rgba(212,160,23,0.5), inset 0 0 20px rgba(212,160,23,0.15), 0 8px 32px rgba(212,160,23,0.3);
+  position: relative;
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(212,160,23,0.05) 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.final-wrapper .bm:hover {
+  border-color: #F5C842;
+  box-shadow: 0 0 70px rgba(245,200,66,0.6), inset 0 0 20px rgba(212,160,23,0.2), 0 12px 48px rgba(212,160,23,0.4);
+  transform: scale(1.08) !important;
+}
+
+.final-wrapper .bm::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border: 2px solid var(--gold);
+  border-radius: 14px;
+  opacity: 0.2;
+  z-index: -1;
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.02); }
+}
+
+.third-place-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.third-place-wrapper .rnd-hdr {
+  background: rgba(212,160,23,0.1);
+  border: 1px solid rgba(212,160,23,0.4);
+  font-size: 12px;
+}
+
+.match-third .bm {
+  width: 200px !important;
+  border-width: 1px;
+  border-color: rgba(212,160,23,0.5);
+  box-shadow: 0 0 15px rgba(212,160,23,0.1);
+  opacity: 0.9;
 }
 
 /* Export Panel */

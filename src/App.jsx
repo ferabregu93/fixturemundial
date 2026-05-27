@@ -260,6 +260,94 @@ export default function App() {
     }
   };
 
+  // Función para simular todos los resultados basándose en el Ranking FIFA (Distribución de Poisson)
+  const simulateAll = () => {
+    if (!window.confirm("¿Deseas generar resultados realistas (basados en Ranking FIFA) para todo el torneo?")) return;
+
+    // Generador de goles basado en Poisson
+    const getRealisticGoals = (idH, idA) => {
+      const rH = TEAMS[idH]?.rank || 100;
+      const rA = TEAMS[idA]?.rank || 100;
+      const diff = rA - rH; // Positivo si el local es mejor rankeado (número de rank más bajo)
+      
+      const lambdaH = Math.max(0.3, 1.3 + (diff / 75));
+      const lambdaA = Math.max(0.3, 1.3 - (diff / 75));
+
+      const poisson = (lambda) => {
+        let L = Math.exp(-lambda), k = 0, p = 1;
+        do { k++; p *= Math.random(); } while (p > L);
+        return k - 1;
+      };
+
+      return { gh: poisson(lambdaH).toString(), ga: poisson(lambdaA).toString() };
+    };
+
+    const newFixture = {};
+    const newScores = {};
+
+    // 1. Simular Fase de Grupos
+    Object.keys(fixture).forEach(grp => {
+      newFixture[grp] = fixture[grp].map(m => {
+        const res = getRealisticGoals(m.home, m.away);
+        return { ...m, gh: res.gh, ga: res.ga };
+      });
+    });
+
+    // 2. Calcular Clasificados locales para la progresión
+    const localTables = {};
+    Object.keys(GROUPS).forEach(g => { localTables[g] = calcGroupTable(g, newFixture[g]); });
+    
+    const localThirds = Object.entries(localTables)
+      .map(([grp, tbl]) => ({ ...tbl[2], grp }))
+      .filter(t => t && t.id)
+      .sort((a, b) => {
+        if (b.pts !== a.pts) return b.pts - a.pts;
+        if (b.dg !== a.dg) return b.dg - a.dg;
+        if (b.gf !== a.gf) return b.gf - a.gf;
+        return (TEAMS[a.id]?.rank || 99) - (TEAMS[b.id]?.rank || 99);
+      });
+
+    const localR32Teams = resolveR32Teams(localTables, localThirds.slice(0, 8));
+
+    // 3. Helper para partidos de eliminación
+    const simulateMatch = (id, h, a) => {
+      if (!h || h === "---" || !a || a === "---") return "---";
+      const res = getRealisticGoals(h, a);
+      let winner = null;
+      const ghN = parseInt(res.gh), gaN = parseInt(res.ga);
+      
+      if (ghN > gaN) winner = h;
+      else if (gaN > ghN) winner = a;
+      else {
+        const probH = (TEAMS[a]?.rank || 100) / ((TEAMS[h]?.rank || 100) + (TEAMS[a]?.rank || 100));
+        winner = Math.random() < probH ? h : a;
+      }
+      newScores[id] = { gh: res.gh, ga: res.ga, winner };
+      return winner;
+    };
+
+    // 4. Progresión de la Llave
+    const r32W = {};
+    R32_STRUCTURE.forEach(m => r32W[m.id] = simulateMatch(m.id, localR32Teams[m.id].home, localR32Teams[m.id].away));
+    const qfW = {};
+    QF_STRUCTURE.forEach(m => qfW[m.id] = simulateMatch(m.id, r32W[m.srcA], r32W[m.srcB]));
+    const sf4W = {};
+    SF4_STRUCTURE.forEach(m => sf4W[m.id] = simulateMatch(m.id, qfW[m.srcA], qfW[m.srcB]));
+    const sf2W = {}, sf2L = {};
+    SF2_STRUCTURE.forEach(m => {
+      const w = simulateMatch(m.id, sf4W[m.srcA], sf4W[m.srcB]);
+      sf2W[m.id] = w;
+      sf2L[m.id] = w === sf4W[m.srcA] ? sf4W[m.srcB] : sf4W[m.srcA];
+    });
+    const champ = simulateMatch("P104", sf2W["P101"], sf2W["P102"]);
+    simulateMatch("P103", sf2L["P101"], sf2L["P102"]);
+
+    setFixture(newFixture);
+    setScores(newScores);
+    showToast("🎲 Simulación realista completada");
+    if (champ && champ !== "---") confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
+  };
+
   // Motor de arrastre (Drag & Drop) para la llave
   const onMouseDown = e => {
     const el = vpRef.current;
@@ -273,8 +361,12 @@ export default function App() {
     if (!d.dragging) return;
     const el = vpRef.current;
     if (!el) return;
-    el.scrollLeft = d.sl - (e.clientX - d.sx);
-    el.scrollTop = d.st - (e.clientY - d.sy);
+    // Calcular movimiento
+    const newScrollLeft = d.sl - (e.clientX - d.sx);
+    const newScrollTop = d.st - (e.clientY - d.sy);
+    // Limitar el desplazamiento a los límites del contenido
+    el.scrollLeft = Math.max(0, Math.min(newScrollLeft, el.scrollWidth - el.clientWidth));
+    el.scrollTop = Math.max(0, Math.min(newScrollTop, el.scrollHeight - el.clientHeight));
   };
   const onMouseUp = () => {
     dragRef.current.dragging = false;
@@ -582,6 +674,7 @@ export default function App() {
         <button className={`nbtn ${tab === "terceros" ? "active" : ""}`} onClick={() => setTab("terceros")}>Terceros</button>
         <button className={`nbtn ${tab === "ranking" ? "active" : ""}`} onClick={() => setTab("ranking")}>Ranking</button>
         <button className={`nbtn ${tab === "playoff" ? "active" : ""}`} onClick={() => setTab("playoff")}>Llave Final</button>
+        <button className="nbtn" onClick={simulateAll} style={{ borderColor: "var(--gold)", color: "var(--gold)" }}>Simular Todo</button>
         <button className="nbtn" onClick={resetSimulation} style={{ borderColor: "var(--danger)", color: "var(--danger)" }}>Reiniciar</button>
       </div>
 

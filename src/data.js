@@ -54,8 +54,8 @@ export const R32_STRUCTURE = [
 ];
 
 export const QF_STRUCTURE = [
-  {id:"P89",label:"P89 · Sáb 04/07",srcA:"P74",srcB:"P73"},
-  {id:"P90",label:"P90 · Sáb 04/07",srcA:"P77",srcB:"P75"},
+  {id:"P89",label:"P89 · Sáb 04/07",srcA:"P74",srcB:"P77"},
+  {id:"P90",label:"P90 · Sáb 04/07",srcA:"P73",srcB:"P75"},
   {id:"P91",label:"P91 · Dom 05/07",srcA:"P76",srcB:"P78"},
   {id:"P92",label:"P92 · Dom 05/07",srcA:"P79",srcB:"P80"},
   {id:"P93",label:"P93 · Lun 06/07",srcA:"P83",srcB:"P84"},
@@ -66,8 +66,8 @@ export const QF_STRUCTURE = [
 
 export const SF4_STRUCTURE = [
   {id:"P97", label:"P97 · Jue 09/07",srcA:"P89",srcB:"P90"},
-  {id:"P98", label:"P98 · Vie 10/07",srcA:"P91",srcB:"P92"},
-  {id:"P99", label:"P99 · Sáb 11/07",srcA:"P93",srcB:"P94"},
+  {id:"P98", label:"P98 · Vie 10/07",srcA:"P93",srcB:"P94"},
+  {id:"P99", label:"P99 · Sáb 11/07",srcA:"P91",srcB:"P92"},
   {id:"P100",label:"P100 · Sáb 11/07",srcA:"P95",srcB:"P96"},
 ];
 
